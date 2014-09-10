@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="Author" content="http://www.dennisbusch.de">
+    
+    <title>HTML5 Test 5: test/demonstrate loading Refugee Lib using rlBoot</title>
+
+    <!-- include "Refugee Lib" WIP-framework -->                     
+    <script type="text/javascript" src="./script/rlBoot.js"></script> 
+    
+  </head>
+  <body>
+    <div id="divMain" style="display: table-cell; width: 400px; height: 300px; vertical-align: middle; text-align: center; color: #FFFFFF; background: #80C0E0;">
+    Please enable <i>javascript</i> and then reload this page.<br>
+    </div>
+  
+    <script type="text/javascript" defer>           
+      var mainFunc = function(bootCode)
+      { 
+        var d = document.getElementById("divMain");
+        d.innerHTML+="in mainFunc: rlBoot demo finished with bootCode: "+bootCode;
+        d.scrollTop = d.scrollHeight - d.clientHeight;  
+        if(bootCode == 0)
+        {
+          // DO NOTHING, this page just demonstrates rlBoot
+          // but otherwise Refugee Lib functions are ready to use now         
+        }
+      };
+      
+      var additionalScripts = [ "./script/rlDemos.js", "./script/rlScriptShrink.js", "./script/failTest.js" ];
+      var cleanDivOnSuccess = false;
+      rlBoot.bootRefugeeLib("divMain", additionalScripts, this, mainFunc, cleanDivOnSuccess);
+    </script>                                    
+  </body>
+</html>
