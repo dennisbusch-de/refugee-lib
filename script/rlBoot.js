@@ -36,6 +36,10 @@ var rlBoot = function()
   var regularBootScriptURLs = [
                                 "./script/3rdparty/webgl-utils.js",
                                 "./script/rlG.js",
+                                "./script/rlMath.js",
+                                "./script/rlUtilsDOM.js",
+                                "./script/rlKeys.js",
+                                "./script/rlInputEvent.js",                    
                                 "./script/rlEngine.js",
                                 "./script/rlDataManager.js"
                                 //" ./script/",
@@ -277,7 +281,13 @@ var rlBoot = function()
       var endOfFeatures = 0;  
       var neededFeatures = [  
                              Blob,
-                             JSON, 
+                             document,
+                             document.createElement,
+                             document.body,
+                             document.body.style,
+                             document.body.style.cursor,
+                             JSON,
+                             window.addEventListener, 
                              window.Canvas,
                              window.WebGLRenderingContext,
                              Worker, 
