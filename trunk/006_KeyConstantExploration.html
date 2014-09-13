@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="Author" content="http://www.dennisbusch.de">
+    
+    <title>Test 006: collecting raw browser-specific keyboard event information</title>
+
+    <!-- include "Refugee Lib" WIP-framework -->                     
+    <script type="text/javascript" src="./script/rlBoot.js"></script> 
+    
+  </head>
+  <body>
+    <div id="divMain" style="display: table-cell; width: 400px; height: 300px; vertical-align: middle; text-align: center; color: #FFFFFF; background: #80C0E0;">
+    Please enable <i>javascript</i> and then reload this page.
+    </div>
+    <div id="divKeyInfo" style="display: table-cell; position: absolute; overflow: scroll; left: 420px; width: 400px; height: 300px; vertical-align: middle; text-align: left; color: #FFFFFF; background: #80C0E0; border-style: solid; border-width: 2px; border-color: #000000;">
+    collected key identifiers, location, rlKeyId:<br>
+    </div>
+  
+    <script type="text/javascript" defer>           
+      var mainFunc = function(bootCode)
+      { 
+        console.log("bootCode: "+bootCode);  
+        if(bootCode == 0)
+        {
+          var engine = new rlEngine("divMain", "keyExplorer", true, 400, 300, true);
+          
+          engine.onUpdateViews = function(GL, G2D, time)
+          {
+            GL.clearColor(0,0,0,1);
+            GL.clear(GL.COLOR_BUFFER_BIT);
+            G2D.clearRect(0,0,400,300);
+          };
+          
+          var outDiv = document.getElementById("divKeyInfo");
+          
+          engine.onRawInputEvent = function(event)
+          {
+            if(event.type == "keydown" || event.type == "keyup" )
+            {
+              // Chrome: keyIdentifier / FF, IE: key (in latest versions available on Sept. 13th 2014)
+              var unifiedKeyId = event.keyIdentifier || event.key;
+              var unifiedKeyLoc = event.location;
+              var rlKeyId = rlKeys.getKeyId(unifiedKeyId, unifiedKeyLoc);
+              
+              outDiv.innerHTML += (event.type == "keyup" ? "up: " : "down: ")+ unifiedKeyId+", "+unifiedKeyLoc+", "+rlKeyId+"<br>";
+              outDiv.scrollTop = outDiv.scrollHeight - outDiv.clientHeight;
+                
+              lastKeyId = unifiedKeyId;  
+            }
+          };
+        }
+      };
+      
+      var additionalScripts = [ "./script/rlDemos.js" ];
+      rlBoot.bootRefugeeLib("divMain", additionalScripts, this, mainFunc, true);
+    </script>
+  </body>
+</html>

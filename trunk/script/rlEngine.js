@@ -51,12 +51,13 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var LastFPSMeasureTime = 0.0;
   var Paused = true;
   var Debug = debug || false;
+  var CursorImage = null;
   var CurrentUpdateRequestId = 0; // last requested id for the next browser animation frame
   var VUTick = 0;
   var LUTick = 0;
   var renderSingleFrame = false;
   
-  // parameters for the main canvas and overlay canvas
+  // parameters for the main canvas and overlay canvas creation
   var Width  = width || 400;
   var Height = height || 225;
   var MainCanvasId = name + "CanvasMain";
@@ -65,8 +66,22 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
           
   var canvasMain = null; // will hold main canvas
   var canvasOverlay = null; // will hold overlay canvas
+  var canvasRect = null; // will hold canvas rectangle coordinates
   var GL = null; // will hold webgl drawing context for main canvas
-  var G2D = null; // will hold 2D drawing context for overlay canvas
+  var G2D = null; // will hold 2D drawing context for overlay canvas 
+         
+  // for debugging/development/browser behavior exploration
+  var lastRawKeyInfo = "";
+  var lastKeyInfo = "";
+  
+  // mouse input states
+  var mx = -1, cmx = 0; // uncapped, capped (0..Width-1)
+  var my = -1, cmy = 0; // uncapped, capped (0..Height-1)
+  var mb = rlInputEvent.createEmptyMouseButtonState(); 
+  var mInside = false;
+  
+  // keyboard input states
+  var keys = rlInputEvent.createEmptyKeyState();    
   
   var debugMsg = function(toLog)
   {
@@ -77,6 +92,9 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var toggleDebug = function()
   {
     Debug = !Debug;
+    
+    canvasMain.style.borderWidth = Debug ? "2px" : "0px";
+    canvasOverlay.style.borderWidth = Debug ? "2px" : "0px";
   };
   this.toggleDebug = toggleDebug;
            
@@ -93,8 +111,8 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     
     if(Paused) // pausing now
     {
-      if(CurrentUpdateRequestId)
-        window.cancelAnimationFrame(CurrentUpdateRequestId);
+      //if(CurrentUpdateRequestId)
+      //  window.cancelAnimationFrame(CurrentUpdateRequestId);
         
       CurrentUpdateRequestId = 0;
  
@@ -116,13 +134,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       {
         LogicTimer.postMessage(MSPerLU);
         LogicTimer.postMessage("start");
-      }   
-      CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
+      }
+         
+      // CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
     }
     
     return Paused;
   };
   this.togglePause = togglePause; 
+  this.isPaused = function() { return Paused; };
   
   // keep track of performed number of logic updates
   var updateLogicStats = function(){
@@ -167,7 +187,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     LUPSCounting++;
     updateLogicStats();
   };
-  this.onUpdateLogic = null; // user must supply a function for it
+  var updateWarning = true;
+  this.onUpdateLogic = function(LUTick) 
+  {
+    if(Debug && updateWarning) 
+    {
+      console.warn("Warning from rlEngine("+name+"): default onUpdateLogic callback called.");
+      updateWarning = false;
+    }
+  };
   this.forceUpdateLogic = function() { updateLogic(LUTick+1); };
 
   // keep track of performed number of render updates
@@ -180,7 +208,13 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       LastFPSMeasureTime = rlCore.getTimestamp();
     }
   };
-
+      
+  var setCursorImage = function(newImage)
+  { 
+    CursorImage = newImage;
+  };
+  this.setCursorImage = setCursorImage;
+  
   // perform or skip a single view frame update
   var updateViews = function(time)
   {
@@ -188,21 +222,35 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
        
     // call user supplied update views callback 
     myself.onUpdateViews(GL, G2D, time);
+          
+    // render cursor
+    if(CursorImage != null)
+    {
+      G2D.drawImage(CursorImage, cmx, cmy);
+    }
     
     // render debug overlay here if enabled 
     if(Debug)
     {    
       G2D.save(); 
-      var lupsInfo = "LUPS: "+LUPS;
+      var lupsInfo =   "  LUPS: "+LUPS;
       var luTickInfo = "LUTick: "+LUTick;
-      var fpsInfo = "FPS: "+FPS;
+      var fpsInfo =    "   FPS: "+FPS;
       var vuTickInfo = "VUTick: "+VUTick;
+      var mxInfo =     "    mx: "+mx;
+      var myInfo =     "    my: "+my;
+      var cmxInfo =    "   cmx: "+cmx;
+      var cmyInfo =    "   cmy: "+cmy;
+      var mbInfo =     "    mb: ";
+      var i;
+      for(i in mb)
+        mbInfo += mb[i] ? "1" : "0";     
       
-      //G2D.clearRect(0,0,Width, Height);
+      /*G2D.clearRect(0,0,Width, Height);
       //G2D.fillStyle = "#000000";
-      //G2D.fillRect(0,0,Width,Height);
+      G2D.fillRect(0,0,Width,Height);*/
       
-      G2D.font = "12px Lucida Console";
+      G2D.font = "12px Courier";
       G2D.textBaseline = "middle";
       G2D.textAlign = "left";
       G2D.fillStyle = "#FFFFFF";
@@ -212,6 +260,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       G2D.fillText(luTickInfo, 8, 32);
       G2D.fillText(fpsInfo, 8, 64);
       G2D.fillText(vuTickInfo, 8, 80);
+      G2D.fillText(mxInfo, 8, 112);
+      G2D.fillText(myInfo, 8, 128);
+      G2D.fillText(cmxInfo, 8, 144);
+      G2D.fillText(cmyInfo, 8, 160);
+      G2D.fillText(mbInfo, 8, 176);
+      G2D.fillText(lastRawKeyInfo, 8, 208);
+      G2D.fillText(lastKeyInfo, 8, 224);
+      G2D.fillText(keys[0].toString(16), 8, 240);
+      G2D.fillText(keys[1].toString(16), 8, 256);      
       
       if(Paused)
       {
@@ -230,7 +287,16 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     if(!renderSingleFrame)
       CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
   };
-  this.onUpdateViews = null; // user must supply a function for it
+  var viewWarning = true;
+  this.onUpdateViews = function(GL, G2D, time) 
+  {
+    if(Debug && viewWarning)
+    {
+      console.warn("Warning from rlEngine("+name+"): default onUpdateViews callback called.");
+      viewWarning = false;
+    }
+  };  
+  
   var forceUpdateViews = function() 
   { 
     renderSingleFrame = true;
@@ -258,13 +324,158 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       togglePause();
   };
   this.changeLUPS = changeLUPS; 
+       
+  var prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent(); 
+  var handleInputEvent = function(event) 
+  {   
+    if(myself.onRawInputEvent != null)
+    {
+      myself.onRawInputEvent(event);
+    }
+  
+    var unifiedType = event.type;
+    var unifiedKeyId = 0;
+    var unifiedKeyLoc = 0;
+    var unifiedWheelInfo = 0;
+    var rlKeyId = "";
+                  
+    // reset stateless input sources
+    mb.wheelDown = false;
+    mb.wheelUp = false;
+    
+    // EVENT PATCHING start {
+    // patch event before further processing (to have the same data in every browser type)
+    if(event.type == "DOMMouseScroll")
+    {
+      unifiedType = "mousewheel";
+      unifiedWheelInfo = rlMath.capValue(-1,event.detail,1);
+    }       
+    
+    if(event.type == "mousewheel")
+      unifiedWheelInfo = rlMath.capValue(-1,-event.wheelDelta,1);
+      
+    if(event.type == "keydown" || event.type == "keyup")
+    {      
+      // Chrome: keyIdentifier / FF, IE: key
+      unifiedKeyId = event.keyIdentifier || event.key;
+      unifiedKeyLoc = event.location;
+      
+      rlKeyId = rlKeys.getKeyId(unifiedKeyId, unifiedKeyLoc);
+      
+      if(Debug)
+      {
+        lastRawKeyInfo = "rawKeyId: " + unifiedKeyId + " keyLoc: " + unifiedKeyLoc;
+        lastKeyInfo = "rlKeyId: "+rlKeyId;
+      }
+    }
+    // EVENT PATCHING end }
+    
+    // MOUSE EVENT HANDLING start {
+    if(unifiedType.indexOf("mouse") != -1)
+    { 
+      mx = event.clientX - canvasRect.left;
+      my = event.clientY - canvasRect.top;
+      cmx = rlMath.capValue(0, mx, Width-1);
+      cmy = rlMath.capValue(0, my, Height-1);
+      mInside = rlMath.p2DinRect({ x: event.clientX, y: event.clientY }, canvasRect);
+       
+      if(Debug)
+      {  
+        if(!prevMouseKeyboardEvent.inside && mInside)
+          canvasOverlay.style.borderColor = "#FFFFFF";
+          
+        if(!mInside && prevMouseKeyboardEvent.inside)
+          canvasOverlay.style.borderColor = "#000000";
+      }
+      
+      if(unifiedType.charAt(5) == "d") // mousedown
+      {
+        mb[rlInputEvent.translateMouseButtonId(event.button)] = true;
+      }
+      if(unifiedType.charAt(5) == "u") // mouseup
+      {
+        mb[rlInputEvent.translateMouseButtonId(event.button)] = false;
+        
+        if(event.button == 2 && mInside) // prevent contextmenu if mouse is on canvas
+        {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }
+      if(unifiedType.charAt(5) == "w") // mousewheel
+      {                     
+        if(unifiedWheelInfo > 0)
+          mb.wheelDown = true;
+        else if(unifiedWheelInfo < 0)     
+          mb.wheelUp = true;
+          
+        if(mInside) // prevent page scrolling if mouse is on canvas
+        {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      } 
+ 
+      var mouseEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, "Unknown", false);
+      
+      // call user defined event handler
+      myself.onInputEvent(mouseEvent, prevMouseKeyboardEvent);
+      
+      prevMouseKeyboardEvent = mouseEvent;
+    } 
+    // MOUSE EVENT HANDLING end } 
+    
+    // KEYBOARD EVENT HANDLING start {
+    if(unifiedType.indexOf("key") != -1)
+    { 
+      var up = unifiedType.charAt(3) == "u";
+       
+      if(!up) // keydown
+        rlInputEvent.setKeyState(rlKeyId, keys);
+      if(up) // keyup
+      {
+        rlInputEvent.clearKeyState(rlKeyId, keys);
+        rlInputEvent.checkClearModKeyState(rlKeyId, keys);
+      }
+        
+      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, up);
+
+      event.preventDefault();
+      event.stopPropagation();
+                              
+      // call user defined event handler
+      myself.onInputEvent(keyboardEvent, prevMouseKeyboardEvent);
+      
+      prevMouseKeyboardEvent = keyboardEvent;
+    }
+    
+    // KEYBOARD EVENT HANDLING end }     
+  };
+  var inputWarning = true;
+  this.onInputEvent = function(currentEvent, previousEvent) 
+  {
+    if(Debug && inputWarning)
+    {
+      console.warn("Warning from rlEngine("+name+"): default onInputEvent callback called.");
+      inputWarning = false;
+    }
+  };
+  this.onRawInputEvent = null; // allows handling DOM events directly
   
   // canvas initialization     
   CanvasContainer = document.getElementById(containerId);
   if(CanvasContainer != null)
   {
-    canvasMain = rlG.createCanvas(CanvasContainer, MainCanvasId, Width, Height, 100, "2px", "solid", "#A0A0A0");
-    canvasOverlay = rlG.createCanvas(CanvasContainer, OverlayCanvasId, Width, Height, 110, "2px", "dotted", "#00FF00"); 
+    canvasMain = rlG.createCanvas(CanvasContainer, MainCanvasId, Width, Height, 100, Debug ? "2px" : "0px", "solid", "#000000");
+    canvasOverlay = rlG.createCanvas(CanvasContainer, OverlayCanvasId, Width, Height, 110, Debug ? "2px" : "0px", "dotted", "#000000");
+    canvasMain.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); };
+    canvasOverlay.oncontextmenu = canvasMain.oncontextmenu;
+    
+    canvasRect = rlUtilsDOM.getClientRect(canvasMain);
+    
+    canvasMain.style.cursor = "none";
+    canvasOverlay.style.cursor = "none";
+    setCursorImage(rlCursors.getDefaultCursorImage());
 
     // context initialization
     GL = rlG.getContextGL(canvasMain);
@@ -281,6 +492,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   // provide function to call by any external timer on tick
   this.manualTick = updateLogic;
   
-  // add internal input updater ("GLOBAL" HOTKEYS for toggleing Pause / Debug)            
-  // input updater (will receive input events from the engine)
+  // initialize input handlers 
+  var eventRoot = window;
+  var eventsToHandle = [ "mousedown", "mouseup", "mousemove",
+                         "DOMMouseScroll", "mousewheel",
+                         "keydown", "keyup"
+                       ];
+  for(e in eventsToHandle)                       
+    eventRoot.addEventListener(eventsToHandle[e], handleInputEvent, true);
+    
+  // start view updates
+  CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
 };

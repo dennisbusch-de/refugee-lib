@@ -43,7 +43,6 @@ var rlG = function()
     c.style.borderStyle = borderStyle;
     c.style.borderColor = borderColor;
     
-    
     container.appendChild(c);
     return c;  
   };
@@ -137,4 +136,52 @@ var rlColors = function()
   return {
     getPalette: function(name) { return paletteIndex[name]; }
   };  
+}();
+
+var rlCursors = function()
+{
+  var makeDefaultCursorImage = function(width, height)
+  {         
+    var ca = rlG.createCanvas(document.createElement("div"), "rlDefaultCursorCanvas", width, height, 1000, "1px", "solid", "#FF00FF");
+    ca.style.background = "transparent";
+    
+    var c = rlG.getContext2D(ca);
+    c.fillStyle = "#FFFFFF";
+    c.strokeStyle = "#000000";
+    c.lineWidth = 1.0;
+    c.beginPath();
+    c.moveTo(0,0);
+    c.lineTo(0,height*1.0);
+    c.lineTo(width*0.375, height*0.59375);
+    c.lineTo(width*0.75, height*1.0);
+    c.lineTo(width*1.0, height*0.75);
+    c.lineTo(width*0.625, height*0.40625);
+    c.lineTo(width*1.0, 0);
+    c.closePath();
+    c.fill();
+    c.stroke();
+ 
+    var img = document.createElement("img");
+    img.src = ca.toDataURL("image/png");   
+        
+    return img;    
+  };
+  
+  var defaultCursorImage = makeDefaultCursorImage(16,16);
+     
+  var remakeDefaultCursorImage = function(width, height)
+  {
+    defaultCursorImage = makeDefaultCursorImage(width || 16, height || 16);
+    return defaultCursorImage;
+  };
+  
+  var getDefaultCursorImage = function()
+  {
+    return defaultCursorImage; 
+  };
+  
+  return {
+    getDefaultCursorImage: getDefaultCursorImage,
+    remakeDefaultCursorImage: remakeDefaultCursorImage
+  };                                                                                                              
 }();
