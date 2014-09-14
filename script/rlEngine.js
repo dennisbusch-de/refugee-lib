@@ -244,7 +244,16 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       var mbInfo =     "    mb: ";
       var i;
       for(i in mb)
-        mbInfo += mb[i] ? "1" : "0";     
+        mbInfo += mb[i] ? "1" : "0";
+      var keyBits = [];
+      for(i=0; i<2; i++)
+      {
+        var t = rlUtilsConvert.numberToBinaryString(keys[i]);
+        keyBits[0+i*4] = t.substr(0, 16);
+        keyBits[1+i*4] = t.substr(16, 16);
+        keyBits[2+i*4] = t.substr(32, 16);
+        keyBits[3+i*4] = t.substr(48, 16);
+      }     
       
       /*G2D.clearRect(0,0,Width, Height);
       //G2D.fillStyle = "#000000";
@@ -265,10 +274,10 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       G2D.fillText(cmxInfo, 8, 144);
       G2D.fillText(cmyInfo, 8, 160);
       G2D.fillText(mbInfo, 8, 176);
-      G2D.fillText(lastRawKeyInfo, 8, 208);
-      G2D.fillText(lastKeyInfo, 8, 224);
-      G2D.fillText(keys[0].toString(16), 8, 240);
-      G2D.fillText(keys[1].toString(16), 8, 256);      
+      G2D.fillText(lastRawKeyInfo, 128, 112);
+      G2D.fillText(lastKeyInfo, 128, 128);
+      for(i=0; i<8; i++)
+        G2D.fillText(keyBits[i], 128, 144+i*16);      
       
       if(Paused)
       {
@@ -334,7 +343,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     }
   
     var unifiedType = event.type;
-    var unifiedKeyId = 0;
+    var unifiedKeyId = "";
     var unifiedKeyLoc = 0;
     var unifiedWheelInfo = 0;
     var rlKeyId = "";
@@ -365,7 +374,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       if(Debug)
       {
         lastRawKeyInfo = "rawKeyId: " + unifiedKeyId + " keyLoc: " + unifiedKeyLoc;
-        lastKeyInfo = "rlKeyId: "+rlKeyId;
+        lastKeyInfo = "rlKeyId: "+rlKeyId+(rlKeyId=="Unknown"?"("+unifiedKeyId+")":"");
       }
     }
     // EVENT PATCHING end }
@@ -416,7 +425,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
         }
       } 
  
-      var mouseEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, "Unknown", false);
+      var mouseEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, "None", false, "");
       
       // call user defined event handler
       myself.onInputEvent(mouseEvent, prevMouseKeyboardEvent);
@@ -438,7 +447,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
         rlInputEvent.checkClearModKeyState(rlKeyId, keys);
       }
         
-      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, up);
+      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, up, (rlKeyId == "Unknown" ? unifiedKeyId : ""));
 
       event.preventDefault();
       event.stopPropagation();
