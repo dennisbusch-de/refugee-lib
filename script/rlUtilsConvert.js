@@ -28,22 +28,22 @@
 
 var rlUtilsConvert = function()
 {
-  var ntbs = function(n)
+  var i32tbs = function(n)
   { 
     var s = "";
-    var i;
+    var i,j;
     if(typeof n == "number")
-    {                                
-      for(i=0; i<64; i++)
-        s = ((n>>i & 1 > 0)?"1":"0")+s;
+    { 
+      for(i=0; i<32; i++)
+        s = ((n>>i & 1 == 1)?"1":"0")+s;
     }
     else
       s = "NaN";  
-    
+          
     return s;
   };
     
   return {
-    numberToBinaryString: ntbs
+    i32ToBinaryString: i32tbs
   };
 }();

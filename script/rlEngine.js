@@ -246,13 +246,11 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       for(i in mb)
         mbInfo += mb[i] ? "1" : "0";
       var keyBits = [];
-      for(i=0; i<2; i++)
+      for(i=0; i<4; i++)
       {
-        var t = rlUtilsConvert.numberToBinaryString(keys[i]);
-        keyBits[0+i*4] = t.substr(0, 16);
-        keyBits[1+i*4] = t.substr(16, 16);
-        keyBits[2+i*4] = t.substr(32, 16);
-        keyBits[3+i*4] = t.substr(48, 16);
+        var t = rlUtilsConvert.i32ToBinaryString(keys[i]);
+        keyBits[7-i*2] = t.substr(16, 16);
+        keyBits[6-i*2] = t.substr(0, 16);
       }     
       
       /*G2D.clearRect(0,0,Width, Height);

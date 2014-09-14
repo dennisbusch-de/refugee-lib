@@ -288,6 +288,7 @@ var rlBoot = function()
                              document.body.style,
                              document.body.style.cursor,
                              JSON,
+                             Uint32Array,
                              window.addEventListener, 
                              window.Canvas,
                              window.WebGLRenderingContext,
