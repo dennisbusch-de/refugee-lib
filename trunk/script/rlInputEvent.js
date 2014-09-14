@@ -32,14 +32,14 @@ var rlInputEvent = function()
   {
     return { type: type, tick: tick, rx: rx, ry: ry, cx: cx, cy: cy, inside: inside, 
              buttons: cloneMouseButtonState(buttons), 
-             keys: cloneKeyState(keys), rlKeyId: rlKeyId, up : up, unknownKey: unknownKey };
+             keys: rlKeys.cloneKeyState(keys), rlKeyId: rlKeyId, up : up, unknownKey: unknownKey };
   };
   
   var createEmptyMouseKeyboardEvent = function()
   {
     return createMouseKeyboardEvent("mke", 0, 0, 0, 0, 0, false, 
                                     createEmptyMouseButtonState(),  
-                                    createEmptyKeyState(), "None", false, "");
+                                    rlKeys.createEmptyKeyState(), "None", false, "");
   };
   
   var createEmptyMouseButtonState = function()
@@ -63,23 +63,13 @@ var rlInputEvent = function()
              wheelDown: buttons.wheelDown, wheelUp: buttons.wheelUp  };
   };
   
-  var createEmptyKeyState = function()
-  {
-    return [ 0, 0 ];
-  };
-  
-  var cloneKeyState = function(state)
-  {
-    return [ state[0], state[1] ];
-  };
-  
   return {
     createMouseKeyboardEvent: createMouseKeyboardEvent,
     createEmptyMouseKeyboardEvent: createEmptyMouseKeyboardEvent,
     createEmptyMouseButtonState: createEmptyMouseButtonState,
     translateMouseButtonId: translateMouseButtonId,
-    createEmptyKeyState: createEmptyKeyState,
-    cloneKeyState: cloneKeyState,
+    createEmptyKeyState: rlKeys.createEmptyKeyState,
+    cloneKeyState: rlKeys.cloneKeyState,
     setKeyState: rlKeys.setKeyState,
     clearKeyState: rlKeys.clearKeyState,
     checkClearModKeyState : rlKeys.checkClearModKeyState,

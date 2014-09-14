@@ -171,27 +171,18 @@ var rlKeys = function()
          
   // collect unique ids and calculate bitCode for every defined key
   k = 0;
-  var ext = false;
-  var extChecked = false;
   for(i=0; i<4; i++)
   {
     for(j in l[i])
     {
       if(typeof bitCode[l[i][j]] == "undefined")
-      {                        
-        bitCode[l[i][j]] = { bit: 1<<k, ext: ext };    
+      {                           
+        bitCode[l[i][j]] = { bit: 1<<(k%32), ext: Math.floor(k/32) };    
         k++;
-        
-        if(!extChecked)
-        {
-          ext = k > 63;
-          if(ext)
-            k = 0;
-          extChecked = ext;
-        } 
       }
     }
   }
+  //console.log(k); console.log(l[i-1][j]);
   
   var getKeyId = function(sourceId, sourceLocation)
   { 
@@ -200,19 +191,27 @@ var rlKeys = function()
     else
       return "Unknown";
   };
-
+     
+  var createEmptyKeyState = function()
+  {
+    return new Uint32Array(4);
+  };
+  
+  var cloneKeyState = function(state)
+  {
+    return new Uint32Array(state);
+  };
+  
   var setKeyStateBit = function(keyId, keyState)
   {                                      
-    var i = bitCode[keyId].ext ? 1 : 0;
-    keyState[i] = keyState[i] | bitCode[keyId].bit;
-    //return keyState; 
+    var i = bitCode[keyId].ext;
+    keyState[i] = keyState[i] | bitCode[keyId].bit; 
   };
   
   var clearKeyStateBit = function(keyId, keyState)
   {                                      
-    var i = bitCode[keyId].ext ? 1 : 0;
-    keyState[i] = (keyState[i] | bitCode[keyId].bit) ^ bitCode[keyId].bit;
-    //return keyState; 
+    var i = bitCode[keyId].ext;
+    keyState[i] = (keyState[i] | bitCode[keyId].bit) ^ bitCode[keyId].bit; 
   };
   
   var checkClearModKeyStateBits = function(keyId, keyState)
@@ -234,12 +233,14 @@ var rlKeys = function()
   
   var getKeyStateBit = function(keyId, keyState)
   {                                      
-    var i = bitCode[keyId].ext ? 1 : 0;
+    var i = bitCode[keyId].ext;
     return (keyState[i] & bitCode[keyId].bit) > 0;  
   };  
   
   return {
     getKeyId: getKeyId,
+    createEmptyKeyState: createEmptyKeyState,
+    cloneKeyState: cloneKeyState,
     setKeyState: setKeyStateBit,
     clearKeyState: clearKeyStateBit,
     checkClearModKeyState: checkClearModKeyStateBits,
