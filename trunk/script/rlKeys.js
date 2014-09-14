@@ -119,6 +119,7 @@ var rlKeys = function()
   l[3]["4"] = "N4";
   l[3]["Clear"] = "N5";
   l[3]["5"] = "N5";
+  l[3]["Unidentified"] = "N5";  
   l[3]["Right"] = "N6";
   l[3]["6"] = "N6";
   l[1]["Shift"] = "LeftShift";
@@ -163,7 +164,10 @@ var rlKeys = function()
   l[0]["Alt"] = "ReleaseAlt";
   l[0]["Win"] = "ReleaseOS";
   l[0]["OS"] = "ReleaseOS";
-  l[0]["Unknown"] = "Unknown";  
+  l[0]["Unknown"] = "Unknown";
+  l[1]["Meta"] = "MetaLeft";
+  l[2]["Meta"] = "MetaRight";
+  l[0]["None"] = "None"; // special id for non-key events
          
   // collect unique ids and calculate bitCode for every defined key
   k = 0;

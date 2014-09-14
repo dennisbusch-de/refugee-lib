@@ -37,6 +37,7 @@ var rlBoot = function()
                                 "./script/3rdparty/webgl-utils.js",
                                 "./script/rlG.js",
                                 "./script/rlMath.js",
+                                "./script/rlUtilsConvert.js",
                                 "./script/rlUtilsDOM.js",
                                 "./script/rlKeys.js",
                                 "./script/rlInputEvent.js",                    
