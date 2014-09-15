@@ -79,7 +79,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var my = -1, cmy = 0; // uncapped, capped (0..Height-1)
   var mb = rlInputEvent.createEmptyMouseButtonState(); 
   var mInside = false;
-  
+                                                             
   // keyboard input states
   var keys = rlInputEvent.createEmptyKeyState();    
   
@@ -246,11 +246,11 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       for(i in mb)
         mbInfo += mb[i] ? "1" : "0";
       var keyBits = [];
-      for(i=0; i<4; i++)
+      for(i=0; i<keys.length; i++)
       {
         var t = rlUtilsConvert.i32ToBinaryString(keys[i]);
-        keyBits[7-i*2] = t.substr(16, 16);
-        keyBits[6-i*2] = t.substr(0, 16);
+        keyBits[(keys.length*2-1)-i*2] = t.substr(16, 16);
+        keyBits[(keys.length*2-2)-i*2] = t.substr(0, 16);
       }     
       
       /*G2D.clearRect(0,0,Width, Height);
@@ -274,7 +274,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       G2D.fillText(mbInfo, 8, 176);
       G2D.fillText(lastRawKeyInfo, 128, 112);
       G2D.fillText(lastKeyInfo, 128, 128);
-      for(i=0; i<8; i++)
+      for(i=0; i<keyBits.length; i++)
         G2D.fillText(keyBits[i], 128, 144+i*16);      
       
       if(Paused)
@@ -332,7 +332,9 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   };
   this.changeLUPS = changeLUPS; 
        
-  var prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent(); 
+  var prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent();
+  var lastKeyDownId = ""; // needed for "keypress" events, to know which key in the preceding "keydown" actually produced the printable character
+  var lastKeyDownCode = 0;
   var handleInputEvent = function(event) 
   {   
     if(myself.onRawInputEvent != null)
@@ -343,6 +345,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     var unifiedType = event.type;
     var unifiedKeyId = "";
     var unifiedKeyLoc = 0;
+    var printableChar = "";
     var unifiedWheelInfo = 0;
     var rlKeyId = "";
                   
@@ -361,18 +364,43 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     if(event.type == "mousewheel")
       unifiedWheelInfo = rlMath.capValue(-1,-event.wheelDelta,1);
       
-    if(event.type == "keydown" || event.type == "keyup")
+    if(event.type.substr(0,3) == "key")
     {      
       // Chrome: keyIdentifier / FF, IE: key
       unifiedKeyId = event.keyIdentifier || event.key;
       unifiedKeyLoc = event.location;
       
-      rlKeyId = rlKeys.getKeyId(unifiedKeyId, unifiedKeyLoc);
+      // determine printable char (if any)
+      // (this is a patchy solution, since at time of writing the new DOM level 3 properties .key and .code
+      //  were not widely supported/implemented yet, so the deprecated properties (which are NOT unicode values)
+      //  are used here, well aware that they won't always produce the correct character for all keys
+      //  on all the different keyboard layouts of the world)
+      printableChar = (typeof event.key != "undefined") ? event.key : // this should be correct in the future :) 
+                      (event.which == null) ? String.fromCharCode(event.keyCode) :
+                      (event.which != 0 && event.charCode != 0) ? String.fromCharCode(event.which) :
+                      "";
+      printableChar = printableChar.length == 1 ? printableChar : "";
+      // at time of writing, the above pseudo-solution will give:
+      // FireFox: correct printable char on all locales or an empty string if the key does not produce a printable char
+      // IE: correct printable char in most cases but not for all keys and switching locale at runtime in IE causes 
+      // keypresses to eventually become "Unidentified" 
+      // Chrome: correct printable char on all locales or an empty string if the key does not produce a printable char
+      // or if the event does not know that yet (chrome only gives correct printable char on "keypress"
+      // but not on "keydown" where the code is never referring to an actual character)
+      
+      rlKeyId = (event.type != "keypress") ? rlKeys.getKeyId(unifiedKeyId, unifiedKeyLoc)
+                : lastKeyDownId;
+      
+      if(event.type == "keydown")
+      {
+        lastKeyDownId = rlKeyId;
+        lastKeyDownCode = event.keyCode;
+      }         
       
       if(Debug)
       {
         lastRawKeyInfo = "rawKeyId: " + unifiedKeyId + " keyLoc: " + unifiedKeyLoc;
-        lastKeyInfo = "rlKeyId: "+rlKeyId+(rlKeyId=="Unknown"?"("+unifiedKeyId+")":"");
+        lastKeyInfo = "rlKeyId: "+rlKeyId+" ["+printableChar+"]";
       }
     }
     // EVENT PATCHING end }
@@ -435,20 +463,31 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     // KEYBOARD EVENT HANDLING start {
     if(unifiedType.indexOf("key") != -1)
     { 
-      var up = unifiedType.charAt(3) == "u";
+      var t = unifiedType.charAt(3);
+      var stateId = rlKeyId != "Unknown" ? rlKeyId : printableChar;
+      var stateCode = t == "p" ? lastKeyDownCode : event.keyCode;
        
-      if(!up) // keydown
-        rlInputEvent.setKeyState(rlKeyId, keys);
-      if(up) // keyup
+      if(t=="d" || t=="p") // keydown && keypress
       {
-        rlInputEvent.clearKeyState(rlKeyId, keys);
+        //var ps = keys.length;
+        keys = rlInputEvent.setKeyState(stateId, keys, stateCode);
+        //var as = keys.length;
+        //console.log(ps+"<->"+as);
+      }
+      if(t=="u") // keyup
+      {
+        keys = rlInputEvent.clearKeyState(stateId, keys, stateCode);
+        keys = rlInputEvent.clearKeyState("Unknown", keys);
         rlInputEvent.checkClearModKeyState(rlKeyId, keys);
       }
         
-      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, up, (rlKeyId == "Unknown" ? unifiedKeyId : ""));
-
-      event.preventDefault();
-      event.stopPropagation();
+      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, t=="u", printableChar);
+      
+      if((printableChar == "" && unifiedKeyId.indexOf("U+") == -1)||printableChar != "") // patchy solution to allow follow up "keypress" events to fire in Chrome (which are needed to get correct printable characters there)
+      {
+        event.preventDefault();
+        event.stopPropagation();
+      }
                               
       // call user defined event handler
       myself.onInputEvent(keyboardEvent, prevMouseKeyboardEvent);
@@ -503,7 +542,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var eventRoot = window;
   var eventsToHandle = [ "mousedown", "mouseup", "mousemove",
                          "DOMMouseScroll", "mousewheel",
-                         "keydown", "keyup"
+                         "keydown", "keyup", "keypress", 
                        ];
   for(e in eventsToHandle)                       
     eventRoot.addEventListener(eventsToHandle[e], handleInputEvent, true);

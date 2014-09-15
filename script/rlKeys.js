@@ -30,12 +30,16 @@ var rlKeys = function()
 {
   var l = [ {}, {}, {}, {} ];
   var bitCode = {};
+  var lastKnownKeyCodes = {};
   
   var modKeys = ["Shift", "Control", "Alt", "OS"];
   var modKeyVariants = ["Left", "Right"];
  
-  var i = 0, j = 0, k =0;
+  var i = 0, j = 0, k = 0;
   var t = "", u = "";
+  
+  var currentStateSize = 4;
+  var unknownIdPrefix = "UC_";
                     
   // define lookup tables for cross-browser key constants
   l[0]["U+001B"] = "Esc";
@@ -46,8 +50,8 @@ var rlKeys = function()
   l[0]["Scroll"] = "ScrollLock";
   l[0]["ScrollLock"] = "ScrollLock";
   l[0]["Pause"] = "Pause";
-  l[0]["U+00C0"] = "`";
-  l[0]["`"] = "`";
+  l[0]["U+00C0"] = "Unknown";
+  l[0]["`"] = "Unknown";
   for(i=0; i<=9; i++) // digits 0 to 9                   
   { 
     t = i.toString(16).toUpperCase();
@@ -58,10 +62,10 @@ var rlKeys = function()
     else
       l[3]["U+004"+t] = "N"+i.toString(10);
   }
-  l[0]["U+00BD"] = "-";
-  l[0]["-"] = "-";
-  l[0]["U+00BB"] = "=";
-  l[0]["="] = "=";
+  l[0]["U+00BD"] = "Unknown";
+  l[0]["-"] = "Unknown";  
+  l[0]["U+00BB"] = "Unknown";
+  l[0]["="] = "Unknown";
   l[0]["U+0008"] = "Backspace";
   l[0]["Backspace"] = "Backspace";
   l[0]["Insert"] = "Insert";
@@ -85,17 +89,17 @@ var rlKeys = function()
     j = 65+i;
     t = j.toString(16).toUpperCase();
     t = t.length == 1 ? "0"+t : t;
-    u = String.fromCharCode(j).toLowerCase();
-    l[0]["U+00"+t] = u;
-    l[0][u] = u;
-    l[0][u.toUpperCase()] = u; 
+    u = String.fromCharCode(j);
+    l[0]["U+00"+t] = "L"+u;
+    l[0][u] = "L"+u;
+    l[0][u.toLowerCase()] = "L"+u; 
   }
-  l[0]["U+00DB"] = "[";
-  l[0]["["] = "[";
-  l[0]["U+00DD"] = "]";
-  l[0]["]"] = "]";
-  l[0]["U+00DC"] = "\\";
-  l[0]["\\"] = "\\";
+  l[0]["U+00DB"] = "Unknown";
+  l[0]["["] = "Unknown";
+  l[0]["U+00DD"] = "Unknown";
+  l[0]["]"] = "Unknown";
+  l[0]["U+00DC"] = "Unknown";
+  l[0]["\\"] = "Unknown";
   l[0]["U+007F"] = "Del";
   l[0]["Del"] = "Del";
   l[0]["End"] = "End";
@@ -110,10 +114,10 @@ var rlKeys = function()
   l[3]["+"] = "N+";
   l[3]["Add"] = "N+";
   l[0]["CapsLock"] = "CapsLock";
-  l[0]["U+00BA"] = ";";
-  l[0][";"] = ";";
-  l[0]["U+00DE"] = "'";
-  l[0]["'"] = "'";
+  l[0]["U+00BA"] = "Unknown";
+  l[0][";"] = "Unknown";
+  l[0]["U+00DE"] = "Unknown";
+  l[0]["'"] = "Unknown";
   l[0]["Enter"] = "Enter";
   l[3]["Left"] = "N4";
   l[3]["4"] = "N4";
@@ -123,12 +127,12 @@ var rlKeys = function()
   l[3]["Right"] = "N6";
   l[3]["6"] = "N6";
   l[1]["Shift"] = "LeftShift";
-  l[0]["U+00BC"] = ",";
-  l[0][","] = ",";
-  l[0]["U+00BE"] = ".";
-  l[0]["."] = ".";
-  l[0]["U+00BF"] = "/";
-  l[0]["/"] = "/";
+  l[0]["U+00BC"] = "Unknown";
+  l[0][","] = "Unknown";
+  l[0]["U+00BE"] = "Unknown";
+  l[0]["."] = "Unknown";
+  l[0]["U+00BF"] = "Unknown";
+  l[0]["/"] = "Unknown";
   l[2]["Shift"] = "RightShift";
   l[0]["Up"] = "Up";
   l[3]["End"] = "N1";
@@ -154,17 +158,18 @@ var rlKeys = function()
   l[0]["Right"] = "Right";
   l[3]["Insert"] = "N0";
   l[3]["0"] = "N0";
-  l[3]["U+007F"] = "N.";
-  l[3]["."] = "N.";
-  l[3]["U+004E"] = "N.";
-  l[3]["Del"] = "N.";
-  l[3]["Decimal"] = "N.";
+  l[3]["U+007F"] = "ND";
+  l[3]["."] = "ND";
+  l[3]["U+004E"] = "ND";
+  l[3]["Del"] = "ND";
+  l[3]["Decimal"] = "ND";
   l[0]["Shift"] = "ReleaseShift";
   l[0]["Control"] = "ReleaseControl";
   l[0]["Alt"] = "ReleaseAlt";
   l[0]["Win"] = "ReleaseOS";
   l[0]["OS"] = "ReleaseOS";
   l[0]["Unknown"] = "Unknown";
+  //l[0]["_dead_"] = ""; // for dead keys (there is no "_dead_" but "" will end up in the bitCode array, so dead keys won't cause undefined IDs for bitset operations)
   l[1]["Meta"] = "MetaLeft";
   l[2]["Meta"] = "MetaRight";
   l[0]["None"] = "None"; // special id for non-key events
@@ -182,7 +187,13 @@ var rlKeys = function()
       }
     }
   }
-  //console.log(k); console.log(l[i-1][j]);
+  //while(k<127)
+  //{
+  //  bitCode["kfill_+"+k] = { bit: 1<<(k%32), ext: Math.floor(k/32) };    
+  //  k++;
+  //}
+  // don't change/re-use k after this (it's used by checkPatchKeyState to dynamically
+  // collect and add state bits for unknown keys at runtime)
   
   var getKeyId = function(sourceId, sourceLocation)
   { 
@@ -193,25 +204,74 @@ var rlKeys = function()
   };
      
   var createEmptyKeyState = function()
-  {
-    return new Uint32Array(4);
+  { 
+    return new Uint32Array(currentStateSize);
   };
   
   var cloneKeyState = function(state)
-  {
-    return new Uint32Array(state);
+  {        
+    var r = createEmptyKeyState();
+    r.set(state);
+    return r;
   };
   
-  var setKeyStateBit = function(keyId, keyState)
-  {                                      
-    var i = bitCode[keyId].ext;
-    keyState[i] = keyState[i] | bitCode[keyId].bit; 
+  var checkPatchKeyState = function(keyId, keyState)
+  { 
+    var bc = (typeof bitCode[keyId] != "undefined") ? bitCode[keyId] : null;
+    if(bc != null)
+      return [bc, keyState];
+    
+    var newId = unknownIdPrefix+keyId;   
+    bc = (typeof bitCode[newId] != "undefined") ? bitCode[newId] : null;
+    if(bc != null)
+      return [bc, keyState];  
+    
+    // patch in new, previously unknown key for state
+    bitCode[newId] = { bit: 1<<(k%32), ext: Math.floor(k/32) };
+    k++;
+    
+    if(bitCode[newId].ext >= currentStateSize) // grow state if necessary
+    {
+      currentStateSize++;
+      keyState = cloneKeyState(keyState);
+      //console.log("keyState grew: "+keyState.length);
+    } 
+    
+    bc = bitCode[newId];
+    //console.log(newId+" "+bc.ext+" "+bc.bit+" new");
+    return [bc, keyState];
+  };
+           
+  var setKeyStateBit = function(keyId, keyState, stateCode)
+  {   
+    var r = checkPatchKeyState(keyId, keyState);
+    var bc = r[0];
+    keyState = r[1];
+    //console.log(keyState.length);
+    lastKnownKeyCodes[stateCode] = bc; 
+    //console.log(stateCode+" "+bc.ext+" "+bc.bit+" set");
+    keyState[bc.ext] = keyState[bc.ext] | bc.bit;
+    
+    return keyState; 
   };
   
-  var clearKeyStateBit = function(keyId, keyState)
-  {                                      
-    var i = bitCode[keyId].ext;
-    keyState[i] = (keyState[i] | bitCode[keyId].bit) ^ bitCode[keyId].bit; 
+  var clearKeyStateBit = function(keyId, keyState, stateCode)
+  { 
+    var r = checkPatchKeyState(keyId, keyState);
+    var bc = r[0];
+    keyState = r[1];
+                                         
+    //console.log(stateCode+" "+bc.ext+" "+bc.bit+" clear1");
+    keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+    
+    if(typeof lastKnownKeyCodes[stateCode] != "undefined")  
+    { 
+      bc = lastKnownKeyCodes[stateCode];
+      //console.log(stateCode+" "+bc.ext+" "+bc.bit+" clear2");
+      keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+    }
+    
+    return keyState; 
   };
   
   var checkClearModKeyStateBits = function(keyId, keyState)
@@ -233,8 +293,11 @@ var rlKeys = function()
   
   var getKeyStateBit = function(keyId, keyState)
   {                                      
-    var i = bitCode[keyId].ext;
-    return (keyState[i] & bitCode[keyId].bit) > 0;  
+    var r = checkPatchKeyState(keyId, keyState);
+    var bc = r[0];
+    keyState = r[1];
+    
+    return (keyState[bc.ext] & bc.bit) > 0;  
   };  
   
   return {

@@ -28,11 +28,11 @@
 
 var rlInputEvent = function()
 {
-  var createMouseKeyboardEvent = function(type, tick, rx, ry, cx, cy, inside, buttons, keys, rlKeyId, up, unknownKey)
+  var createMouseKeyboardEvent = function(type, tick, rx, ry, cx, cy, inside, buttons, keys, rlKeyId, up, printableChar)
   {
     return { type: type, tick: tick, rx: rx, ry: ry, cx: cx, cy: cy, inside: inside, 
              buttons: cloneMouseButtonState(buttons), 
-             keys: rlKeys.cloneKeyState(keys), rlKeyId: rlKeyId, up : up, unknownKey: unknownKey };
+             keys: rlKeys.cloneKeyState(keys), rlKeyId: rlKeyId, up : up, printableChar: printableChar };
   };
   
   var createEmptyMouseKeyboardEvent = function()

@@ -34,17 +34,30 @@
           };
           
           var outDiv = document.getElementById("divKeyInfo");
-          
+                 
+          var lastDownId = ""; 
+          var lastDownCode = "";
           engine.onRawInputEvent = function(event)
           {
-            if(event.type == "keydown" || event.type == "keyup" )
+            if(event.type == "keydown" || event.type == "keyup" || event.type == "keypress" )
             {
               // Chrome: keyIdentifier / FF, IE: key (in latest versions available on Sept. 13th 2014)
               var unifiedKeyId = event.keyIdentifier || event.key;
               var unifiedKeyLoc = event.location;
               var rlKeyId = rlKeys.getKeyId(unifiedKeyId, unifiedKeyLoc);
+              var _code = event.type.charAt(3) == "p" ? lastDownCode : event.keyCode;
+              if(event.type == "keydown")
+              {
+                lastDownId = rlKeyId;
+                lastDownCode = event.keyCode;
+              }
+              if(event.type == "keypress") 
+                rlKeyId = lastDownId;
               
-              outDiv.innerHTML += (event.type == "keyup" ? "up: " : "down: ")+ unifiedKeyId+", "+unifiedKeyLoc+", "+rlKeyId+"<br>";
+              
+              outDiv.innerHTML += event.type+":"+ unifiedKeyId+" | "+unifiedKeyLoc+
+                                  " >> "+rlKeyId+" | "+ _code + " << "+
+                                  event.charCode+" | "+event.keyCode+"<br>";
               outDiv.scrollTop = outDiv.scrollHeight - outDiv.clientHeight;
                 
               lastKeyId = unifiedKeyId;  
