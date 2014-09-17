@@ -1,7 +1,7 @@
-﻿// -----------------------------------------------------------------------------
+﻿// -----------------------------------------------------------------------------  
 // Refugee Lib - WIP
-// library initialization/loader code
-//  
+// functions for booting up Refugee Lib
+// 
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 
@@ -26,6 +26,9 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/** 
+ * @namespace 
+ */
 var rlBoot = function()
 {
   var minimalBootScriptURLs = [ 
@@ -45,13 +48,30 @@ var rlBoot = function()
                                 "./script/rlDataManager.js"
                                 //" ./script/",
                               ];
-                    
+   
+  /** 
+   * (experimental/todo) boot a minimal interface-less subset of Refugee Lib functionality
+   * @memberof rlBoot 
+   * @function 
+   */                
   var bootRefugeeLibMinimal = function(divIdForMessages, additionalScriptURLs, bootContext, mainFunc, clearDivOnSuccess)
   { 
     var eURLs = [].concat(minimalBootScriptURLs, additionalScriptURLs);
     bootRefugeeLibEx(divIdForMessages, eURLs, bootContext, mainFunc, clearDivOnSuccess);
   };
   
+  /** 
+   * Initializes Refugee Lib scripts, optionally loads additional scripts, calls a main function afterwards and displays boot progress.
+   * @see <a href="../rlTemplate_HelloWorld.html" target="blank">a live example using this function</a>   
+   * @memberof rlBoot 
+   * @function
+   * @param {string} divIdForMessages the DOM id of a div tag which will be used to display progress messages  
+   * @param {array} additionalScriptURLs URLs to additional scripts to load after the Refugee Lib scripts have been loaded
+   * @param {object} bootContext set to "this" and call from the global namespace inside the main HTML file (or to any other object implementing the "eval" function)    
+   * @param {function} mainFunc will be called after booting and will be passed a bootCode integer as the first parameter which will be 0 on successful boot
+   * @param {boolean} clearDivOnSuccess set to true, if the div for boot messages should be cleared and hidden after a successful boot process
+   * @returns whatever mainFunc returns
+   */   
   var bootRefugeeLib = function(divIdForMessages, additionalScriptURLs, bootContext, mainFunc, clearDivOnSuccess)
   { 
     var eURLs = [].concat(minimalBootScriptURLs, regularBootScriptURLs, additionalScriptURLs);
@@ -212,7 +232,7 @@ var rlBoot = function()
             throw new Error("the given "+gct(sCol, "mainFunc")+" is not a function");  
            
           mainCalled = true;
-          mainFunc.call(bootContext, bootCode);
+          return mainFunc.call(bootContext, bootCode);
         } 
         catch(exc)
         { 
@@ -310,9 +330,9 @@ var rlBoot = function()
     else
       safeCallMain();
   };
-
+       
   return {
-    bootRefugeeLib: bootRefugeeLib,
+    bootRefugeeLib: bootRefugeeLib, 
     bootRefugeeLibMinimal : bootRefugeeLibMinimal
   };
 }();
