@@ -1,0 +1,29 @@
+{
+  "tags": {
+      "allowUnknownTags": true
+  },
+  "source": {
+      "include": [ "readme.md", "./script/" ],
+      "exclude": [],
+      "includePattern": ".+\\.js(doc)?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "plugins": [ "plugins/markdown" ],
+  "templates": {
+      "cleverLinks": true,
+      "monospaceLinks": false,
+      "default": {
+        "outputSourceFiles": false
+      }
+  },
+  "opts": {
+      "template": "templates/default",
+      "encoding": "utf8",
+      "destination": "./docs/",
+      "recurse": false,
+      "tutorials": "./tutorials/",
+      "query": "value",
+      "private": true,
+      "lenient": true
+  }
+}
