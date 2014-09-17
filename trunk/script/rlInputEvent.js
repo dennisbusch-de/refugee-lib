@@ -54,7 +54,11 @@ var rlInputEvent = function()
     if(id == 1)
       return "middle";
     if(id == 2)
-      return "right";
+      return "right"; 
+    if(id == 3)
+      return "wheelDown";
+    if(id == 4)
+      return "wheelUp";
   };
   
   var cloneMouseButtonState = function(buttons)
@@ -68,11 +72,6 @@ var rlInputEvent = function()
     createEmptyMouseKeyboardEvent: createEmptyMouseKeyboardEvent,
     createEmptyMouseButtonState: createEmptyMouseButtonState,
     translateMouseButtonId: translateMouseButtonId,
-    createEmptyKeyState: rlKeys.createEmptyKeyState,
-    cloneKeyState: rlKeys.cloneKeyState,
-    setKeyState: rlKeys.setKeyState,
-    clearKeyState: rlKeys.clearKeyState,
-    checkClearModKeyState : rlKeys.checkClearModKeyState,
     getKeyState: rlKeys.getKeyState
   };
 }();

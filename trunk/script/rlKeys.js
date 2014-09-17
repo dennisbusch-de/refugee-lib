@@ -1,4 +1,4 @@
-// -----------------------------------------------------------------------------
+﻿// -----------------------------------------------------------------------------
 // Refugee Lib - WIP
 // keyboard input translation (for unified cross-platform key identifiers)
 // 
@@ -40,8 +40,13 @@ var rlKeys = function()
   
   var currentStateSize = 4;
   var unknownIdPrefix = "UC_";
+  var unknownId = "Unknown";
+  var getUnknownKeyId = function()
+  {
+    return unknownId;
+  };
                     
-  // define lookup tables for cross-browser key constants
+  // define lookup tables for cross-browser key constants                      
   l[0]["U+001B"] = "Esc";
   l[0]["Esc"] = "Esc";
   for(i=1; i<=12; i++) // F1 to F12
@@ -50,8 +55,6 @@ var rlKeys = function()
   l[0]["Scroll"] = "ScrollLock";
   l[0]["ScrollLock"] = "ScrollLock";
   l[0]["Pause"] = "Pause";
-  l[0]["U+00C0"] = "Unknown";
-  l[0]["`"] = "Unknown";
   for(i=0; i<=9; i++) // digits 0 to 9                   
   { 
     t = i.toString(16).toUpperCase();
@@ -62,10 +65,6 @@ var rlKeys = function()
     else
       l[3]["U+004"+t] = "N"+i.toString(10);
   }
-  l[0]["U+00BD"] = "Unknown";
-  l[0]["-"] = "Unknown";  
-  l[0]["U+00BB"] = "Unknown";
-  l[0]["="] = "Unknown";
   l[0]["U+0008"] = "Backspace";
   l[0]["Backspace"] = "Backspace";
   l[0]["Insert"] = "Insert";
@@ -84,7 +83,7 @@ var rlKeys = function()
   l[3]["Subtract"] = "N-";
   l[0]["U+0009"] = "Tab";
   l[0]["Tab"] = "Tab";
-  for(i=0; i<=26; i++) // a to z in upper and lower case variants
+  for(i=0; i<26; i++) // a to z in upper and lower case variants
   { 
     j = 65+i;
     t = j.toString(16).toUpperCase();
@@ -94,12 +93,6 @@ var rlKeys = function()
     l[0][u] = "L"+u;
     l[0][u.toLowerCase()] = "L"+u; 
   }
-  l[0]["U+00DB"] = "Unknown";
-  l[0]["["] = "Unknown";
-  l[0]["U+00DD"] = "Unknown";
-  l[0]["]"] = "Unknown";
-  l[0]["U+00DC"] = "Unknown";
-  l[0]["\\"] = "Unknown";
   l[0]["U+007F"] = "Del";
   l[0]["Del"] = "Del";
   l[0]["End"] = "End";
@@ -114,10 +107,6 @@ var rlKeys = function()
   l[3]["+"] = "N+";
   l[3]["Add"] = "N+";
   l[0]["CapsLock"] = "CapsLock";
-  l[0]["U+00BA"] = "Unknown";
-  l[0][";"] = "Unknown";
-  l[0]["U+00DE"] = "Unknown";
-  l[0]["'"] = "Unknown";
   l[0]["Enter"] = "Enter";
   l[3]["Left"] = "N4";
   l[3]["4"] = "N4";
@@ -127,12 +116,6 @@ var rlKeys = function()
   l[3]["Right"] = "N6";
   l[3]["6"] = "N6";
   l[1]["Shift"] = "LeftShift";
-  l[0]["U+00BC"] = "Unknown";
-  l[0][","] = "Unknown";
-  l[0]["U+00BE"] = "Unknown";
-  l[0]["."] = "Unknown";
-  l[0]["U+00BF"] = "Unknown";
-  l[0]["/"] = "Unknown";
   l[2]["Shift"] = "RightShift";
   l[0]["Up"] = "Up";
   l[3]["End"] = "N1";
@@ -149,6 +132,7 @@ var rlKeys = function()
   l[0]["U+0020"] = "Space";
   l[0][""] = "Space";
   l[0]["Spacebar"] = "Space";
+  l[0][" "] = "Space";
   l[2]["Alt"] = "RightAlt";
   l[2]["Win"] = "RightOS";
   l[2]["OS"] = "RightOS";
@@ -168,7 +152,6 @@ var rlKeys = function()
   l[0]["Alt"] = "ReleaseAlt";
   l[0]["Win"] = "ReleaseOS";
   l[0]["OS"] = "ReleaseOS";
-  l[0]["Unknown"] = "Unknown";
   //l[0]["_dead_"] = ""; // for dead keys (there is no "_dead_" but "" will end up in the bitCode array, so dead keys won't cause undefined IDs for bitset operations)
   l[1]["Meta"] = "MetaLeft";
   l[2]["Meta"] = "MetaRight";
@@ -176,6 +159,10 @@ var rlKeys = function()
          
   // collect unique ids and calculate bitCode for every defined key
   k = 0;
+  
+  bitCode[unknownId] = { bit: 1<<(k%32), ext: Math.floor(k/32) };
+  k++;
+  
   for(i=0; i<4; i++)
   {
     for(j in l[i])
@@ -186,12 +173,20 @@ var rlKeys = function()
         k++;
       }
     }
-  }
-  //while(k<127)
-  //{
-  //  bitCode["kfill_+"+k] = { bit: 1<<(k%32), ext: Math.floor(k/32) };    
-  //  k++;
-  //}
+  }   
+  
+  var commonSymbols = [ "`", "~", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-",
+                        "_", "=", "+", "[", "{", "]", "}", "\\", "|", ";", ":", "'", "\"",  
+                        ",", "<", ".", ">", "/", "?", "°", "´", "€", "§", "µ",  
+                        "£", "¬", "¢", "±", "¶", "¤", "÷", "×", "№",  
+                        "¦", "—", "·", "©", "‘", "’", "«", "»",
+                      ]; // , ""
+  for(i=0; i<commonSymbols.length; i++)
+  { 
+    bitCode[unknownIdPrefix+commonSymbols[i]] = { bit: 1<<(k%32), ext: Math.floor(k/32) };    
+    k++;
+  }  
+  currentStateSize = Math.floor(1+(k/32)); 
   // don't change/re-use k after this (it's used by checkPatchKeyState to dynamically
   // collect and add state bits for unknown keys at runtime)
   
@@ -200,7 +195,7 @@ var rlKeys = function()
     if(typeof l[sourceLocation][sourceId] != "undefined")
       return l[sourceLocation][sourceId];      
     else
-      return "Unknown";
+      return unknownId;
   };
      
   var createEmptyKeyState = function()
@@ -216,15 +211,15 @@ var rlKeys = function()
   };
   
   var checkPatchKeyState = function(keyId, keyState)
-  { 
+  {              
     var bc = (typeof bitCode[keyId] != "undefined") ? bitCode[keyId] : null;
     if(bc != null)
-      return [bc, keyState];
+      return [bc, keyState, false];
     
     var newId = unknownIdPrefix+keyId;   
     bc = (typeof bitCode[newId] != "undefined") ? bitCode[newId] : null;
     if(bc != null)
-      return [bc, keyState];  
+      return [bc, keyState, true];  
     
     // patch in new, previously unknown key for state
     bitCode[newId] = { bit: 1<<(k%32), ext: Math.floor(k/32) };
@@ -234,12 +229,11 @@ var rlKeys = function()
     {
       currentStateSize++;
       keyState = cloneKeyState(keyState);
-      //console.log("keyState grew: "+keyState.length);
     } 
     
     bc = bitCode[newId];
-    //console.log(newId+" "+bc.ext+" "+bc.bit+" new");
-    return [bc, keyState];
+    
+    return [bc, keyState, true];
   };
            
   var setKeyStateBit = function(keyId, keyState, stateCode)
@@ -247,9 +241,9 @@ var rlKeys = function()
     var r = checkPatchKeyState(keyId, keyState);
     var bc = r[0];
     keyState = r[1];
-    //console.log(keyState.length);
+    
     lastKnownKeyCodes[stateCode] = bc; 
-    //console.log(stateCode+" "+bc.ext+" "+bc.bit+" set");
+    
     keyState[bc.ext] = keyState[bc.ext] | bc.bit;
     
     return keyState; 
@@ -261,34 +255,66 @@ var rlKeys = function()
     var bc = r[0];
     keyState = r[1];
                                          
-    //console.log(stateCode+" "+bc.ext+" "+bc.bit+" clear1");
     keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
     
     if(typeof lastKnownKeyCodes[stateCode] != "undefined")  
     { 
       bc = lastKnownKeyCodes[stateCode];
-      //console.log(stateCode+" "+bc.ext+" "+bc.bit+" clear2");
       keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+    }
+    
+    if(r[2]) // clear "Unknown"-indicator bit?
+    { 
+      bc = bitCode[unknownId];
+      keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+    }
+     
+    if(keyId.indexOf("Re") != -1) // "Release.." ? (handle release of modkeys, where location was unknown in keyup)
+    { // at time of writing this is only needed in Chrome which always reports location 0 on keyup event of modifier keys)     
+      var s = keyId.substr(7);
+      var i;  
+      for(i=0; i<modKeyVariants.length; i++)
+      {
+        bc = bitCode[modKeyVariants[i]+s];
+        keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+      }
+    }
+    
+    // handle clearing of modkey flags to prevent them from getting stuck (needed if multiple
+    // mod keys are held down and the browser reporting only one keyup event)
+    var i,j,x;
+    var found = false;
+    for(i=0; i<modKeyVariants.length; i++)
+    {
+      for(j=0; j<modKeys.length; j++)
+      {
+        if(keyId == modKeyVariants[i]+modKeys[j])
+        {
+          found = true;
+          for(x=0; x<modKeyVariants.length; x++)
+          {
+            bc = bitCode[modKeyVariants[x]+modKeys[j]];
+            keyState[bc.ext] = (keyState[bc.ext] | bc.bit) ^ bc.bit;
+          }
+          
+          break;
+        }
+      }
+      
+      if(found)
+        break;
     }
     
     return keyState; 
   };
   
-  var checkClearModKeyStateBits = function(keyId, keyState)
+  var clearWholeKeyState = function(keyState)
   { 
-    if(keyId.indexOf("Re") != -1) // "Release"
-    {     
-      var s = keyId.substr(7);  
-      for(i in modKeys)
-      {
-        if(s == modKeys[i])
-        {
-          for(j in modKeyVariants)
-            clearKeyStateBit(modKeyVariants[j]+s, keyState);
-          return;
-        }
-      }
-    }
+    var i;
+    for(i=0; i<keyState.length; i++)
+      keyState[i] = 0;
+    
+    return keyState;
   };
   
   var getKeyStateBit = function(keyId, keyState)
@@ -302,11 +328,12 @@ var rlKeys = function()
   
   return {
     getKeyId: getKeyId,
+    getUnknownKeyId: getUnknownKeyId,
     createEmptyKeyState: createEmptyKeyState,
     cloneKeyState: cloneKeyState,
-    setKeyState: setKeyStateBit,
-    clearKeyState: clearKeyStateBit,
-    checkClearModKeyState: checkClearModKeyStateBits,
+    setKeyStateBit: setKeyStateBit,
+    clearKeyStateBit: clearKeyStateBit,
+    clearWholeKeyState: clearWholeKeyState,
     getKeyState: getKeyStateBit
   }; 
 }();

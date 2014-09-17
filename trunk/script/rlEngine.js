@@ -81,7 +81,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var mInside = false;
                                                              
   // keyboard input states
-  var keys = rlInputEvent.createEmptyKeyState();    
+  var keys = rlKeys.createEmptyKeyState();    
   
   var debugMsg = function(toLog)
   {
@@ -254,7 +254,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       }     
       
       /*G2D.clearRect(0,0,Width, Height);
-      //G2D.fillStyle = "#000000";
+      G2D.fillStyle = "#000000";
       G2D.fillRect(0,0,Width,Height);*/
       
       G2D.font = "12px Courier";
@@ -272,10 +272,10 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       G2D.fillText(cmxInfo, 8, 144);
       G2D.fillText(cmyInfo, 8, 160);
       G2D.fillText(mbInfo, 8, 176);
-      G2D.fillText(lastRawKeyInfo, 128, 112);
-      G2D.fillText(lastKeyInfo, 128, 128);
+      G2D.fillText(lastRawKeyInfo, 128, 16);
+      G2D.fillText(lastKeyInfo, 128, 32);
       for(i=0; i<keyBits.length; i++)
-        G2D.fillText(keyBits[i], 128, 144+i*16);      
+        G2D.fillText(keyBits[i], 128, 48+i*16);      
       
       if(Paused)
       {
@@ -334,7 +334,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
        
   var prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent();
   var lastKeyDownId = ""; // needed for "keypress" events, to know which key in the preceding "keydown" actually produced the printable character
-  var lastKeyDownCode = 0;
+  var lastKeyDownCode = 0;// needed for "keypress" events, to know which key in the preceding "keydown" actually produced the printable character 
   var handleInputEvent = function(event) 
   {   
     if(myself.onRawInputEvent != null)
@@ -464,21 +464,16 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     if(unifiedType.indexOf("key") != -1)
     { 
       var t = unifiedType.charAt(3);
-      var stateId = rlKeyId != "Unknown" ? rlKeyId : printableChar;
+      var stateId = (printableChar != "" && rlKeyId == rlKeys.getUnknownKeyId()) ? printableChar : rlKeyId;
       var stateCode = t == "p" ? lastKeyDownCode : event.keyCode;
        
       if(t=="d" || t=="p") // keydown && keypress
       {
-        //var ps = keys.length;
-        keys = rlInputEvent.setKeyState(stateId, keys, stateCode);
-        //var as = keys.length;
-        //console.log(ps+"<->"+as);
+        keys = rlKeys.setKeyStateBit(stateId, keys, stateCode);
       }
       if(t=="u") // keyup
       {
-        keys = rlInputEvent.clearKeyState(stateId, keys, stateCode);
-        keys = rlInputEvent.clearKeyState("Unknown", keys);
-        rlInputEvent.checkClearModKeyState(rlKeyId, keys);
+        keys = rlKeys.clearKeyStateBit(stateId, keys, stateCode);
       }
         
       var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, t=="u", printableChar);
@@ -507,6 +502,24 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     }
   };
   this.onRawInputEvent = null; // allows handling DOM events directly
+    
+  var clearInputState = function()
+  {                                     
+    mb = rlInputEvent.createEmptyMouseButtonState();
+    keys = rlKeys.clearWholeKeyState(keys);
+  };
+  
+  var handleRootEvent = function(event)
+  {  
+    if(event.type == "blur")
+    {
+      clearInputState();
+    }
+    if(event.type == "focus")
+    {
+      clearInputState();
+    }
+  };
   
   // canvas initialization     
   CanvasContainer = document.getElementById(containerId);
@@ -521,7 +534,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     
     canvasMain.style.cursor = "none";
     canvasOverlay.style.cursor = "none";
-    setCursorImage(rlCursors.getDefaultCursorImage());
+    setCursorImage(rlCursors.getDefaultCursorImage());                   
 
     // context initialization
     GL = rlG.getContextGL(canvasMain);
@@ -540,12 +553,17 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   
   // initialize input handlers 
   var eventRoot = window;
-  var eventsToHandle = [ "mousedown", "mouseup", "mousemove",
-                         "DOMMouseScroll", "mousewheel",
-                         "keydown", "keyup", "keypress", 
-                       ];
-  for(e in eventsToHandle)                       
-    eventRoot.addEventListener(eventsToHandle[e], handleInputEvent, true);
+  var inputEventsToHandle = [ "mousedown", "mouseup", "mousemove",
+                              "DOMMouseScroll", "mousewheel",
+                              "keydown", "keypress", "keyup" 
+                            ];
+  for(e in inputEventsToHandle)                       
+    eventRoot.addEventListener(inputEventsToHandle[e], handleInputEvent, true);
+    
+  // initialize window event handlers
+  var rootEventsToHandle = [ "blur", "focus" ];
+  for(e in rootEventsToHandle)                       
+    eventRoot.addEventListener(rootEventsToHandle[e], handleRootEvent, true);  
     
   // start view updates
   CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
