@@ -1,7 +1,9 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// base object prototype and core types
-//  
+// Refugee Lib
+/**
+ * @file Library information and timing.   
+ * contains: {@link rlCore} | {@link rlLogicTimer} | {@link rlLogicTimerWorker}  
+ */  
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 
@@ -86,14 +88,34 @@ rlObject = function() {
   }
 };
 
+/** 
+ * @namespace 
+ */
 rlCore = function() {
+  /** 
+   * @memberof rlCore
+   * @constant
+   * @private 
+   * @default
+   */
   var version = "Refugee Lib v.-1.0 (very early wip)";
-                 
+
+  /**    
+   * @memberof rlCore 
+   * @function    
+   * @returns {string} {@link rlCore.version}
+   */                 
   var getVersionString = function() 
   {
     return version;
   };
-  
+
+  /**
+   * @see [DOMHighResTimeStamp]{@link https://developer.mozilla.org/en/docs/Web/API/DOMHighResTimeStamp} | [Date.now()]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Date/now}     
+   * @memberof rlCore 
+   * @function    
+   * @returns {number} a high resolution timestamp if available, Date.now() otherwise
+   */  
   var getTimestamp = function()
   {
     if(self.performance)
@@ -108,8 +130,12 @@ rlCore = function() {
   };
 }();
 
-// the following is meant to be used primarily as a Blob inside a Worker
-// (the factory to build that Worker is below it)
+/**
+ * Meant to be used primarily from a Blob inside a Worker but can be instantiated and used directly as well.
+ * Provides steady timing by calling a user defined callback at a fixed interval and passing a tick count each time.
+ * @see {@link rlLogicTimerWorker} 
+ * @constructor
+ */
 rlLogicTimer = function(timerName) 
 {
   if(typeof rlObject !== "undefined")
@@ -240,21 +266,50 @@ rlLogicTimer = function(timerName)
   };
         
   // for use when rlLogicTimer is instanced directly in a thread other than a Worker
+  /** 
+   * Send a message to the rlLogicTimer instance to configure its behaviour.    
+   * @memberof rlLogicTimer 
+   * @function postMessage
+   * @param {(string|number)} messageData pass a number to change the timer interval (in ms) or one of the command strings "start", "stop", "resettick" | pass any other string to change the internal name of the timer (appears in console messages)     
+   */
   this.postMessage = function(messageData)
   { 
     // "#" used by message handler to tell the message came from the same thread            
     this.handleMessage( { type: "#message", data: messageData }); 
   };
   
+  /** 
+   * Set the callback function to call on each timer tick when using the timer instance directly without a Worker.    
+   * @memberof rlLogicTimer 
+   * @function setCallback
+   * @param {rlLogicTimer~callbackOnTick} func the callback function to call on each timer tick        
+   */  
   this.setCallback = function(func) { callbackOnTick = func; };
+  
+  /** 
+   * Function signature for callbacks to use with {@link rlLogicTimer.setCallback}.
+   * @callback rlLogicTimer~callbackOnTick
+   * @param {number} tick the current timer tick (increases by 1 with each call)
+   */
   
   Object.defineProperty(this, "name", { enumerable: true, get: (function() { return name; }) });  
 }; 
 rlLogicTimer.prototype.constructor = rlLogicTimer;
 
- // factory for building the Blob and the Worker from the rlLogicTimer code
+/** 
+ * @namespace 
+ */
 rlLogicTimerWorker = function() 
 {
+  /** 
+   * Factory function to create a Blob with a script from {@link rlLogicTimer} and a Worker to run the generated script in a separate thread.    
+   * @see [Blob]{@link https://developer.mozilla.org/en/docs/Web/API/Blob} | [Worker]{@link https://developer.mozilla.org/en/docs/Web/API/Worker} 
+   * @memberof rlLogicTimerWorker 
+   * @function createWorker
+   * @param {string} name the name to use for the rlLogicTimer inside the Worker
+   * @param {boolean} verbose set to true to output status messages to the console     
+   * @returns a Worker object, ready to be used with [postMessage]{@link rlLogicTimer.postMessage} commands for controlling the contained {@link rlLogicTimer} | set the onmessage property to define the [callback]{@link rlLogicTimer~callbackOnTick} 
+   */
   var create = function(name, verbose)
   {
     var inlinedScript = rlLogicTimer.toString();

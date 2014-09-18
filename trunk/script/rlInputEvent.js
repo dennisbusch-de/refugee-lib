@@ -1,7 +1,9 @@
 // -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// input event info for rlEngine
-// 
+// Refugee Lib
+/** 
+ * @file Input event object management for {@link rlEngine}.  
+ * contains: {@link rlInputEvent}  
+ */ 
 // The MIT License (MIT)
 // 
 // Copyright(c) 2014, Dennis Busch 

@@ -1,9 +1,11 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// functions for DOM operations/calculations
-//  
-// The MIT License (MIT)
-//  
+// Refugee Lib
+/** 
+ * @file DOM manipulation functions.  
+ * contains: {@link rlUtilsDOM}  
+ */ 
+// The MIT License (MIT) 
+//   
 // Copyright(c) 2014, Dennis Busch 
 // http://www.dennisbusch.de 
 //

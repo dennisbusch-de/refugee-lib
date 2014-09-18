@@ -1,9 +1,11 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// mathematical functions 
-//  
+// Refugee Lib
+/** 
+ * @file Mathematical functions.  
+ * contains: {@link rlMath}  
+ */
 // The MIT License (MIT)
-//  
+// 
 // Copyright(c) 2014, Dennis Busch 
 // http://www.dennisbusch.de 
 //

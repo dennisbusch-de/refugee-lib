@@ -1,9 +1,11 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// functions for type/data conversions
-//  
-// The MIT License (MIT)
-//  
+// Refugee Lib
+/** 
+ * @file Type conversion functions.  
+ * contains: {@link rlUtilsConvert}  
+ */  
+// The MIT License (MIT) 
+//
 // Copyright(c) 2014, Dennis Busch 
 // http://www.dennisbusch.de 
 //
