@@ -1,7 +1,9 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// script shrinking/expanding
-//  
+// Refugee Lib
+/**
+ * @file Script shrinking/expanding.   
+ * contains: {@link rlScriptShrink}  
+ */  
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 

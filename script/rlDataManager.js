@@ -1,7 +1,9 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// data manager
-//  
+// Refugee Lib
+/**
+ * @file Asset management.  
+ * contains: {@link rlData} | {@link rlDataManager}  
+ */  
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 
@@ -26,6 +28,13 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * Instantiate an object for loading any file from the provided URL into a binary data buffer.
+ * (primarily for use by {@link rlDataManager} but can be used directly well)  
+ * @constructor
+ * @param {string} key a key meant for internally referencing the loaded data
+ * @param {string} srcURL a relative or full URL to the file to load   
+ */
 rlData = function(key, srcURL)
 {
   // inherit all of rlObject
@@ -43,10 +52,30 @@ rlData = function(key, srcURL)
   var key = key;
   var srcURL = srcURL;
                          
-  // callbacks for use by datamanager
-  this.onloadfailed = null; // (key, srcURL, httpStatusCode)
-  this.onloadprogress = null; // (key, srcURL, bytesLoaded, bytesTotal)
-  this.onloadsuccess = null; // (key, srcURL, bytesLoaded, bytesTotal)
+  // callbacks for use by rlDataManager or anything else if using rlData directly
+  /** @instance */
+  this.onloadfailed = null;
+  /** @instance */
+  this.onloadprogress = null; 
+  /** @instance */
+  this.onloadsuccess = null;
+  
+  /** 
+   * Function signature for callbacks to use with [onloadfailed]{@link rlData#onloadfailed}.
+   * @callback rlData~callbackOnLoadFailed
+   * @param {string} key as defined in constructor
+   * @param {string} srcURL as defined in constructor
+   * @param {number} httpStatusCode the http code describing the problem 
+   */
+  
+  /** 
+   * Function signature for callbacks to use with [onloadprogress]{@link rlData#onloadprogress} and [onloadsuccess]{@link rlData#onloadsuccess} 
+   * @callback rlData~callbackOnLoading
+   * @param {string} key as defined in constructor
+   * @param {string} srcURL as defined in constructor
+   * @param {number} bytesLoaded bytes loaded so far 
+   * @param {number} bytesTotal total bytes to load (if known)
+   */    
                    
   var setFailState = function(code)
   {
@@ -110,6 +139,10 @@ rlData = function(key, srcURL)
     
     r.send();
   };
+  /**         
+   * Start loading the data asynchronously. Make sure to set [onloadfailed]{@link rlData#onloadfailed}, [onloadprogress]{@link rlData#onloadprogress} and [onloadsuccess]{@link rlData#onloadsuccess} before calling this. 
+   * @function
+   */
   this.startload = startload; 
   
   var getData = function() {
@@ -118,22 +151,53 @@ rlData = function(key, srcURL)
     else
       return null;      
   };
+  /**
+   * @function
+   * @returns {ArrayBuffer} the binarydata if it successfully loaded already, otherwise null
+   */
   this.getData = getData;
   
   var getLoadState = function() {
     return { key: key, srcURL: srcURL, bytesLoaded: bytesLoaded, bytesTotal: bytesTotal };
-  };                                                            
+  }; 
+  
+  /**  
+   * (not an actual type, use object literals with these properties)
+   * @typedef loadState
+   * @memberof rlData
+   * @property {string} key as defined in constructor
+   * @property {string} srcURL as defined in constructor
+   * @property {number} bytesLoaded bytes loaded so far 
+   * @property {number} bytesTotal total bytes to load (if known)
+   */
+  
+  /**
+   * @function
+   * @returns {rlData.loadState} an object containing load state info
+   */                                                            
   this.getLoadState = getLoadState;
   
   var getLoadStateCompactString = function() {
     return ""+key+" : "+srcURL.substr(srcURL.lastIndexOf("/")+1)+" : "+bytesLoaded+" / "+(bytesTotal == 0 ? "?" : bytesTotal);
   };
+  /**
+   * @function
+   * @returns {string} a compact string representation of the loading state, e.g. "myKey : myImage.png : 42 / 666"   
+   */
   this.getLoadStateCompactString = getLoadStateCompactString;
   
+  /**
+   * @function
+   * @returns {string} the key as defined in constructor
+   */
   this.getKey = function() { return key; };
 };  
 
-
+/**
+ * Instantiate an object for loading multiple files sequentially into {@link rlData} objects. The loaded files can then be referenced by their key.
+ * @TODO integrate jszip to load zip contents as individual data objects  
+ * @constructor   
+ */
 rlDataManager = function()
 {
   // inherit all of rlObject
@@ -149,10 +213,20 @@ rlDataManager = function()
   var failInfo = {};
   var keysToLoad = [];
              
-  // callbacks for use by external object which uses the data manager 
-  this.onloadprogress = null; // (itemsLoaded, itemsFailed, itemsTotal) 
+  // callbacks for use by external object which uses the data manager
+  /** @instance */ 
+  this.onloadprogress = null; // (itemsLoaded, itemsFailed, itemsTotal)
+  /** @instance */ 
   this.onloadfinished = null; // (itemsLoaded, itemsFailed, itemsTotal)
-        
+  
+  /** 
+   * Function signature for callbacks to use with [onloadprogress]{@link rlDataManager#onloadprogress} and [onloadsuccess]{@link rlDataManager#onloadfinished} 
+   * @callback rlDataManager~callbackOnLoading
+   * @param {number} itemsLoaded number of files which were successfully loaded
+   * @param {number} itemsFailed number of files which failed to load 
+   * @param {number} itemsTotal total number of files to load
+   */
+       
   this.loadnext = function()
   {
     var key = keysToLoad.shift(); // treating keys like a FIFO queue
@@ -196,7 +270,14 @@ rlDataManager = function()
   
     var i;
     for(i=0; i<sources.length; i++)
-    {            
+    { 
+      /** (not an actual type, use object literals with these properties)
+       * @typedef dataEntry
+       * @memberof rlDataManager
+       * @property {rlData} item the {@link rlData} instance assigned to this entry
+       * @property {object} info as defined in {@link rlDataManager.sourceDesc}
+       * @property {object} [failInfo] only present if loading of the file within the {@link rlData} instance failed
+       */       
       var o = { item: new rlData(sources[i].key, sources[i].srcURL), 
                 info: sources[i].info };
       o.item.onloadfailed = onitemerror;
@@ -209,17 +290,43 @@ rlDataManager = function()
     
     // load items sequentially (works more reliably than parallel loading especially on very low bandwidths)
     myself.loadnext();
-  };
-  this.startload = startload;
+  }; 
   
+  /**
+   * (not an actual type, use object literals with these properties)
+   * @typedef sourceDesc
+   * @memberof rlDataManager
+   * @property {string} key unique id to associate with the file within the {@link rlDataManager}
+   * @property {string} srcURL relative or absolute URL to the file
+   * @property {object} info anything you want (e.g. for extensions or additional metadata)
+   */  
+      
+  /** 
+   * Start asynchronous, sequential loading of a batch of files. Make sure to set [onloadprogress]{@link rlDataManager#onloadprogress} and [onloadfinished]{@link rlDataManager#onloadfinished} before calling this. Can be called again to load another batch of files after the previous batch finished loading (do not call it again before the batch finished loading).  
+   * @function
+   * @param {rlDataManager.sourceDesc[]} sources an array of objects describing the files to load    
+   */
+  this.startload = startload;
+
+  /**             
+   * @function
+   * @returns {boolean} true if the current batch of files finished loading
+   */  
   this.hasFinished = function() { return itemsLoaded + itemsFailed == itemsTotal; };
   
+  /**
+   * Get the data entry with the given key.
+   * @function
+   * @param {string} key the key which uniquely identifies the entry to get  
+   * @returns {rlDataManager.dataEntry}
+   */
   this.getEntry = function(key) { return items[key]; };
-  this.getItem = function(key) { return items[key].item; };
-  this.getItemFailInfo = function(key) { return items[key].failInfo; };
-  this.getItemProgressInfo = function(key) { return items[key].item.getLoadState(); };
-  this.getItemProgressInfoString = function(key) { return items[key].item.getLoadStateCompactString(); };
-  
+      
+  /**
+   * Get all known keys.
+   * @function   
+   * @returns {string[]}
+   */
   this.getKeys = function() { 
     var key;
     var rKeys = [];

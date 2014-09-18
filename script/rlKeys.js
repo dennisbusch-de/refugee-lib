@@ -1,7 +1,9 @@
 ﻿// -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// keyboard input translation (for unified cross-platform key identifiers)
-// 
+// Refugee Lib
+/** 
+ * @file Keyboard input translation and state management for {@link rlEngine}.  
+ * contains: {@link rlKeys}  
+ */
 // The MIT License (MIT)
 // 
 // Copyright(c) 2014, Dennis Busch 

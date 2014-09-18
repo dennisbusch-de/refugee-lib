@@ -1,7 +1,9 @@
-﻿// -----------------------------------------------------------------------------  
-// Refugee Lib - WIP
-// functions for booting up Refugee Lib
-// 
+﻿// -----------------------------------------------------------------------------
+// Refugee Lib
+/** 
+ * @file Library initialization. Provides functions to load all other script files, so a project using Refugee Lib only needs to include this file in a script tag.    
+ * contains: {@link rlBoot}  
+ */ 
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 
@@ -59,6 +61,12 @@ var rlBoot = function()
     var eURLs = [].concat(minimalBootScriptURLs, additionalScriptURLs);
     bootRefugeeLibEx(divIdForMessages, eURLs, bootContext, mainFunc, clearDivOnSuccess);
   };
+     
+  /** 
+   * Function signature for use with [bootRefugeeLib]{@link rlBoot.bootRefugeeLib}. 
+   * @callback rlBoot~mainFunc
+   * @param {number} bootCode receives the result of the library boot progress (0 on success)
+   */
   
   /** 
    * Initializes Refugee Lib scripts, optionally loads additional scripts, calls a main function afterwards and displays boot progress.
@@ -66,11 +74,11 @@ var rlBoot = function()
    * @memberof rlBoot 
    * @function
    * @param {string} divIdForMessages the DOM id of a div tag which will be used to display progress messages  
-   * @param {array} additionalScriptURLs URLs to additional scripts to load after the Refugee Lib scripts have been loaded
+   * @param {string[]} additionalScriptURLs URLs to additional scripts to load after the Refugee Lib scripts have been loaded
    * @param {object} bootContext set to "this" and call from the global namespace inside the main HTML file (or to any other object implementing the "eval" function)    
-   * @param {function} mainFunc will be called after booting and will be passed a bootCode integer as the first parameter which will be 0 on successful boot
+   * @param {rlBoot~mainFunc} mainFunc will be called after booting 
    * @param {boolean} clearDivOnSuccess set to true, if the div for boot messages should be cleared and hidden after a successful boot process
-   * @returns whatever mainFunc returns
+   * @returns whatever the given {@link rlBoot~mainFunc} returns
    */   
   var bootRefugeeLib = function(divIdForMessages, additionalScriptURLs, bootContext, mainFunc, clearDivOnSuccess)
   { 

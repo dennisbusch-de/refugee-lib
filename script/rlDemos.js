@@ -1,7 +1,9 @@
 // -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// library demos
-//  
+// Refugee Lib
+/** 
+ * @file Factory for instantiating library functionality demos.  
+ * contains: {@link rlDemos}  
+ */  
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 

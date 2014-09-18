@@ -1,7 +1,9 @@
 // -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// graphics
-//  
+// Refugee Lib
+/**
+ * @file Graphics functions.   
+ * contains: {@link rlG} | {@link rlPalette} | {@link rlColors} | {@link rlCursors}  
+ */ 
 // The MIT License (MIT)
 //  
 // Copyright(c) 2014, Dennis Busch 

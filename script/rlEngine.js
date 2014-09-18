@@ -1,7 +1,10 @@
 // -----------------------------------------------------------------------------
-// Refugee Lib - WIP
-// engine (main loop(input,logic,presentation) control)
-// 
+// Refugee Lib
+/** 
+ * @file Engine (main loop(input,logic,presentation) control).  
+ * contains: {@link rlEngine}  
+ */
+// ----------------------------------------------------------------------------- 
 // The MIT License (MIT)
 // 
 // Copyright(c) 2014, Dennis Busch 
