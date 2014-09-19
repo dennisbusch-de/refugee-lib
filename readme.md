@@ -1,5 +1,5 @@
 # Refugee Lib
-(*early WIP (v.-1.0) / September 18th 2014 *)
+(*early WIP (v.-1.0) / September 19th 2014 *)
 *this documentation is a work in progress and subject to be changed/extended as the library development progresses*
 
 ## Introduction

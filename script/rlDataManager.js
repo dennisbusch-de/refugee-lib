@@ -53,11 +53,11 @@ rlData = function(key, srcURL)
   var srcURL = srcURL;
                          
   // callbacks for use by rlDataManager or anything else if using rlData directly
-  /** @instance */
+  /** @member {rlData~callbackOnLoadFailed} */
   this.onloadfailed = null;
-  /** @instance */
+  /** @member {rlData~callbackOnLoading} */
   this.onloadprogress = null; 
-  /** @instance */
+  /** @member {rlData~callbackOnLoading} */
   this.onloadsuccess = null;
   
   /** 
@@ -214,9 +214,9 @@ rlDataManager = function()
   var keysToLoad = [];
              
   // callbacks for use by external object which uses the data manager
-  /** @instance */ 
+  /** @member {rlDataManager~callbackOnLoading} */ 
   this.onloadprogress = null; // (itemsLoaded, itemsFailed, itemsTotal)
-  /** @instance */ 
+  /** @member {rlDataManager~callbackOnLoading} */ 
   this.onloadfinished = null; // (itemsLoaded, itemsFailed, itemsTotal)
   
   /** 

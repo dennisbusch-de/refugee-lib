@@ -28,12 +28,24 @@
 // THE SOFTWARE.
 // ----------------------------------------------------------------------------- 
 
-// limitation: string constants containing a "@:" prefixed by one or
-// more "base64" symbols may lead to those being recursively replaced when a shrunk
-// script is being expanded again   
+/**
+ * "rlScriptShrink.js" ({@link rlBoot.bootRefugeeLib} does not load this script by default) 
+ *  
+ * Experimental tokenization based script shrinking/expanding.  
+ * **Limitation**: string constants containing a "@:" prefixed by one or
+ * more of the modified base64 symbols may lead to those being recursively replaced when a shrunk
+ * script is being expanded again.
+ * @namespace
+ */  
 var rlScriptShrink = function()
 {
-  // modified base64 to use chars `# instead of +/ (which are valid js operators)
+  /**
+   * modified base64 symbols using chars \`\# instead of +/ (which are valid js operators) which are used in placeholder/token ids
+   * @memberof rlScriptShrink
+   * @constant
+   * @private 
+   * @default
+   */
   var b="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`#";
   
   var itb64=function(i)
@@ -185,7 +197,7 @@ var rlScriptShrink = function()
       c[i] = c[i].el;
     }
           
-    // STRING CONSTANTS tokenizations end. }
+    // STRING CONSTANTS tokenization end. }
     
     // CODE TOKENIZATION start {
     // match whole words containing only letters,digits and underscores(charcode 5F)
@@ -290,7 +302,7 @@ var rlScriptShrink = function()
   
   // s=source containining placeholders
   // p=array with prepared tokens for placeholders
-  // c= <0 prefixed placeholders, >0 suffixed placeholders for strings (tokens are expected to include original delimiter hint)
+  // c= <0 prefixed placeholders, else suffixed placeholders for strings (tokens are expected to include original delimiter hint)
   // code tightly packed here (will be used by generator for selfexpanding scripts)
   var getExpansion=function(s,p,c){var y="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`#",j,x,z=s,l=function(i){var r="",v=i,t=1,d=0;while(t*64<=i)t*=64;while(t>=1){d=Math.floor(v/t);r+=y.charAt(d);v-=d*t;t/=64;}return r;};for(j=p.length-1;j>=0;j--){x=c<0?'@'+l(j):l(j)+'@:';while(z.indexOf(x)!=-1)z=z.replace(x,p[j]);}return z;};
   // s,p,c,y,j,x,z,l,i,r,v,t,d (symbols in above function)                
@@ -306,6 +318,50 @@ var rlScriptShrink = function()
     sx+="}();eval(q);";    
     return sx;  
   };
+  
+  /** (not an actual type, use object literals with these properties)
+   * @typedef shrinkData
+   * @memberof rlScriptShrink
+   * @property {string[]} stringTokens contains all found string tokens from a script
+   * @property {string[]} codeTokens contains all found code tokens from a script which were worth replacing to save on character count
+   * @property {string} tokenizedInput a shrunk version of a script where unnecessary whitespace and all comments haven been stripped and string and code tokens have been replaced with placeholders (the placeholder ids are encoded numbers in modified base64 symbols, the ids refer to indices within the stringTokens and codeTokens arrays)   
+   * @property {number} inputCharCount the number of characters in the source script
+   * @property {number} tokenizedCharCount the number of character in the tokenized shrunk version of the script 
+   */
+  
+  /** 
+   * Get shrink data for the given script content.    
+   * @memberof rlScriptShrink 
+   * @function getShrinkData
+   * @param {string} s a string containing the script content to shrink    
+   * @returns {rlScriptShrink.shrinkData} shrinkData ready to be passed to {@link rlScriptShrink.getPreparedData}
+   */
+   
+  /** 
+   * Get prepared data from the given shrink data.    
+   * @memberof rlScriptShrink 
+   * @function getPreparedData
+   * @param {rlScriptShrink.shrinkData} shrinkData previously generated shrink data    
+   * @returns {string[]} an array of strings ready to be passed to {@link rlScriptShrink.getSelfExpandingScript}
+   */ 
+   
+  /**
+   * Replace token identifiers in a source string with token contents.
+   * @memberof rlScriptShrink 
+   * @function getExpansion
+   * @param {string} s a string containing prefixed(@id) and/or suffixed(id@:) token identifiers (id is a number encoded in modified base64 symbols)
+   * @param {string[]} p an array containing the token contents for the token identifiers (index is the token id)
+   * @param {number} c set negative to replace prefixed, zero or positive to replace suffixed token identifiers in s with the token contents
+   * @returns {string} the modified source string where the token identifiers have been replaced with the token contents 
+   */  
+   
+  /**
+   * Get a string whose content can be saved to a .js file which expands itself when it is included in a &lt;script&gt; tag.
+   * @memberof rlScriptShrink
+   * @function getSelfExpandingScript
+   * @param {string[]} preparedData must be the data returned from {@link rlScriptShrink.getPreparedData}
+   * @returns {string} 
+   */ 
   
   return {
     itb64: itb64,

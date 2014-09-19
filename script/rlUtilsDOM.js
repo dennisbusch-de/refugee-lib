@@ -28,8 +28,19 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * @namespace
+ */
 var rlUtilsDOM = function()
 {
+  /** 
+   * Determine the client rectangle of an element inside a document. 
+   * @see [Element]{@link https://developer.mozilla.org/en/docs/Web/API/Element}   
+   * @memberof rlUtilsDOM 
+   * @function 
+   * @param {Element} element the document element for which to determine the client rectangle    
+   * @returns {rlMath.rectangle2D}
+   */
   var getClientRect = function(element)
   { 
     var x = 0;

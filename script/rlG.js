@@ -28,8 +28,26 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/** 
+ * @namespace 
+ */
 var rlG = function() 
 {
+  /** 
+   * Create and optionally insert a Canvas element into the given DOM container element.
+   * @see [Element]{@link https://developer.mozilla.org/en/docs/Web/API/element} | [HTMLCanvasElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement}    
+   * @memberof rlG 
+   * @function
+   * @param {Element|null} container the Element into which to insert the created Canvas or null to create a stand-alone canvas
+   * @param {string} idCanvas the desired id to use for the &lt;canvas&gt; within the DOM
+   * @param {number} width the width of the Canvas in pixels
+   * @param {number} height the height of the Canvas in pixels
+   * @param {number} zIndex the zIndex of the Canvas
+   * @param {string} borderWidth width of the border, e.g. "2px"       
+   * @param {string} borderStyle style of the border, e.g. "solid", "dotted"
+   * @param {string} borderColor color of the border, e.g. "#100381"
+   * @returns {HTMLCanvasElement} the created Canvas
+   */
   var createCanvas = function(container, idCanvas, width, height, zIndex, borderWidth, borderStyle, borderColor)
   {
     var c = document.createElement("canvas");
@@ -45,18 +63,37 @@ var rlG = function()
     c.style.borderStyle = borderStyle;
     c.style.borderColor = borderColor;
     
-    container.appendChild(c);
+    if(container != null)
+      container.appendChild(c);
+      
     return c;  
   };
-
+     
+  
+  /** 
+   * Get the webgl rendering context for a given Canvas. 
+   * @see [WebGLRenderingContext]{@link https://developer.mozilla.org/en/docs/Web/API/WebGLRenderingContext} | [HTMLCanvasElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement}   
+   * @memberof rlG 
+   * @function
+   * @param {string|HTMLCanvasElement} canvas a DOM id of a &lt;canvas&gt; or a HTMLCanvasElement    
+   * @returns {WebGLRenderingContext|null} a webgl rendering context or null if none is available 
+   */
   var getContextGL = function(canvas)
-  {
+  { 
     if(typeof canvas == "string")
       return WebGLUtils.setupWebGL(document.getElementById(canvas));
     if(typeof canvas == "object")
       return WebGLUtils.setupWebGL(canvas);    
   };
-
+  
+  /** 
+   * Get the 2D rendering context for a given Canvas. 
+   * @see [CanvasRenderingContext2D]{@link https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D} | [HTMLCanvasElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement}   
+   * @memberof rlG 
+   * @function
+   * @param {string|HTMLCanvasElement} canvas a DOM id of a &lt;canvas&gt; or a HTMLCanvasElement    
+   * @returns {CanvasRenderingContext2D|null} a 2D rendering context or null if none is available 
+   */
   var getContext2D = function(canvas)
   {
     if(typeof canvas == "string")
@@ -64,8 +101,23 @@ var rlG = function()
     if(typeof canvas == "object")
       return canvas.getContext("2d");
   };   
+   
+  /** (not an actual type, use object literals with these properties)
+   * @typedef rgb
+   * @memberof rlG
+   * @property {number} r red component (0.0 to 1.0)
+   * @property {number} g green component (0.0 to 1.0)
+   * @property {number} b blue component (0.0 to 1.0)
+   */
   
-  var colorHtmlToRGB = function(htmlCode) 
+  /** 
+   * Convert an HTML color string to an [rgb]{@link rlG.rgb} triplet.    
+   * @memberof rlG
+   * @function
+   * @param {string} htmlCode the html color string to convert, e.g. "#234266"    
+   * @returns {rlG.rgb}
+   */
+  var colorHTMLtoRGB = function(htmlCode) 
   {
     var r,g,b;
     if (htmlCode.charAt(0) == '#') 
@@ -78,15 +130,55 @@ var rlG = function()
     b = parseInt(htmlCode.substr(4,2), 16) / 255;
     return { r: r, g: g, b: b };
   };
+   
+  /** 
+   * Convert an [rgb]{@link rlG.rgb} triplet to an HTML color string.    
+   * @memberof rlG
+   * @function
+   * @param {rlG.rgb} rgb the triplet to convert, e.g. { r: 0.13, g: 0.37, b: 0.42 }   
+   * @returns {string}
+   */
+  var colorRGBtoHTML = function(rgb)
+  {
+    var h = "#", t = "", n = 0, pa = ["r","g","b"];
+    for(p in pa)
+    {
+      n = rgb[pa[p]];
+      n = (n < 0.0) ? 0.0 : ( (n > 1.0) ? 1.0 : n );  
+      t = Math.floor(n*255).toString(16).toUpperCase();
+      t = (t.length == 1 ? "0" : "")+t;
+      h += t;
+    }
+    return h;
+  };
   
   return {
     createCanvas: createCanvas, 
     getContextGL: getContextGL,
     getContext2D: getContext2D,
-    colorHtmlToRGB: colorHtmlToRGB
+    colorHTMLtoRGB: colorHTMLtoRGB,
+    colorRGBtoHTML: colorRGBtoHTML
   };
 }();
 
+/** (not an actual type, use object literals with these properties)
+ * @typedef namedColor
+ * @memberof rlPalette
+ * @property {string} name the name to use for the color, e.g. "fullWhite"
+ * @property {string} htmlCode the html code defining the color, e.g. "#FFFFFF"
+ */
+
+/**
+ * Instantiates a named palette with a given array of named colors and adds each
+ * of those colors as a property of the same name to itself, as well as linking the color
+ * to an index number, so a color in the palette can be accessed by both its name and by its index.
+ * Also initializes red, green and blue componenents from the given htmlCode of each named color.
+ * So, a color in the palette is accessed as e.g. p["black"] or p[0] and each color in the palette
+ * has the properties: name, index, htmlCode, r, g and b     
+ * @constructor
+ * @param {string} name the name of the palette
+ * @param {rlPalette.namedColor[]} colors the array of color definitions to put into the palette
+ */
 var rlPalette = function(name, colors ) // colors as array of { name, htmlCode } pairs
 {
   // inherit all of rlObject
@@ -102,8 +194,8 @@ var rlPalette = function(name, colors ) // colors as array of { name, htmlCode }
     if(typeof colors[i].name != "undefined")
       cname = colors[i].name; 
     
-    this[cname] = { name: cname, htmlCode: colors[i].htmlCode };
-    var rgb = rlG.colorHtmlToRGB(colors[i].htmlCode);
+    this[cname] = { name: cname, index: i, htmlCode: colors[i].htmlCode };
+    var rgb = rlG.colorHTMLtoRGB(colors[i].htmlCode);
     this[cname].r = rgb.r;
     this[cname].g = rgb.g;
     this[cname].b = rgb.b;
@@ -111,6 +203,10 @@ var rlPalette = function(name, colors ) // colors as array of { name, htmlCode }
   }   
 };
 
+/**
+ * Builtin, ready-to-use color definitions.
+ * @namespace
+ */
 var rlColors = function()
 {
   // colors hexcodes borrowed from http://www.pepto.de/projects/colorvic/
@@ -134,17 +230,35 @@ var rlColors = function()
   
   var paletteIndex = {};
   paletteIndex[paletteC64.name] = paletteC64;
-                                                           
+    
+  /** 
+   * Get one of the built-in palettes of **Refugee Lib**.
+   * valid palette names are: "C64" (yep, just that one at this early dev stage)
+   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/}   
+   * @memberof rlColors 
+   * @function
+   * @param {string} name the name of the palette to get    
+   * @returns {rlPalette}
+   */    
+  var getPalette = function(name)
+  {
+    return paletteIndex[name];
+  };
+                                                     
   return {
-    getPalette: function(name) { return paletteIndex[name]; }
+    getPalette: getPalette
   };  
 }();
 
+/**
+ * Builtin ready-to-use cursor definitions.
+ * @namespace
+ */
 var rlCursors = function()
 {
   var makeDefaultCursorImage = function(width, height)
   {         
-    var ca = rlG.createCanvas(document.createElement("div"), "rlDefaultCursorCanvas", width, height, 1000, "1px", "solid", "#FF00FF");
+    var ca = rlG.createCanvas(null, "rlDefaultCursorCanvas", width, height, 1000, "1px", "solid", "#FF00FF");
     ca.style.background = "transparent";
     
     var c = rlG.getContext2D(ca);
@@ -169,14 +283,39 @@ var rlCursors = function()
     return img;    
   };
   
-  var defaultCursorImage = makeDefaultCursorImage(16,16);
-     
+  /** 
+   * @memberof rlCursors
+   * @constant
+   * @private 
+   * @default
+   */
+  var defCursorSideLength = 16;
+  
+  var defaultCursorImage = makeDefaultCursorImage(defCursorSideLength, defCursorSideLength);
+          
+  /**
+   * Remake the built-in default cursor image. Use this if you need a bigger default cursor.
+   * @see [HTMLImageElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLImageElement}
+   * @memberof rlCursors
+   * @function
+   * @param {number} width the width of the new cursor image in pixels
+   * @param {number} height the height of the new cursor image in pixels   
+   * @returns {HTMLImageElement}
+   */
   var remakeDefaultCursorImage = function(width, height)
   {
-    defaultCursorImage = makeDefaultCursorImage(width || 16, height || 16);
+    defaultCursorImage = makeDefaultCursorImage(width || defCursorSideLength, height || defCursorSideLength);
     return defaultCursorImage;
   };
   
+  /**
+   * Get the current built-in default cursor image.
+   * @see [HTMLImageElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLImageElement}
+   * @see [remakeDefaultCursorImage]{@link rlCursors.remakeDefaultCursorImage}
+   * @memberof rlCursors
+   * @function
+   * @returns {HTMLImageElement}
+   */
   var getDefaultCursorImage = function()
   {
     return defaultCursorImage; 
