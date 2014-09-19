@@ -28,26 +28,72 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * @namespace
+ */
 var rlMath = function()
 {
+  /** 
+   * Get a capped value from a source value.    
+   * @memberof rlMath 
+   * @function
+   * @param {number} min the minimum     
+   * @param {number} value the value to cap
+   * @param {number} max the maximum
+   * @returns {number} a number in the inclusive range [min, max]
+   */
   var capValue = function(min, value, max)
-  { 
-    if(value < min)
-      return min;
-    
-    if(value > max)
-      return max;
-    
-    return value;
+  {
+    return (value < min) ? min : ((value > max) ? max : value); 
   };
+   
+  /** (not an actual type, use object literals with these properties)  
+   * Defines a point in 2D cartesian space where +x is to the right of and +y is below the origin.
+   * @typedef point2D 
+   * @memberof rlMath
+   * @property {number} x value describing the position on the horizontal axis
+   * @property {number} y value describing the position on the vertical axis
+   */
   
+  /** (not an actual type, use object literals with these properties)  
+   * Defines a rectangle in 2D cartesian space (bottom >= top).
+   * @typedef rectangle2D
+   * @memberof rlMath
+   * @property {number} left value describing the position of the left vertical side on the horizontal axis
+   * @property {number} top value describing the position of the top horizontal side on the vertical axis
+   * @property {number} right value describing the position of the right vertical side on the horizontal axis 
+   * @property {number} bottom value describing the position of the bottom horizontal side on the vertical axis
+   */ 
+  
+  /** 
+   * Determine whether a given point in 2D cartesian space is in the area of a given rectangle in 2D cartesian space.    
+   * @memberof rlMath 
+   * @function
+   * @param {rlMath.point2D} p2D the point to check  
+   * @param {rlMath.rectangle2D} rect the rectangle to check
+   * @returns {boolean} true if the point is within the rectangle area, false otherwise
+   */
   var p2DinRect = function(p2D, rect)
   {
     return p2D.x >= rect.left && p2D.x <= rect.right && p2D.y >= rect.top && p2D.y <= rect.bottom;
   };
     
+  /**
+   * Same as {@link rlMath.p2DinRect} except the parameters are given as arrays whose indices implicitly define the point and rectangle properties.
+   * @memberof rlMath
+   * @function
+   * @param {number[]} p2D the point to check as an array [x,y]
+   * @param {number[]} rect the rectangle to check as an array [left,top,right,bottom]
+   * @returns {boolean} 
+   */
+  var p2DinRectA = function(p2D, rect)
+  {
+    return p2D[0] >= rect[0] && p2D[0] <= rect[2] && p2D[1] >= rect[1] && p2D[1] <= rect[3];
+  };
+    
   return {
     capValue: capValue,
-    p2DinRect: p2DinRect
+    p2DinRect: p2DinRect,
+    p2DinRectA : p2DinRectA
   };
 }();

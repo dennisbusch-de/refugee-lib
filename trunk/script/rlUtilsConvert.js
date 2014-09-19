@@ -28,8 +28,21 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * @namespace
+ */
 var rlUtilsConvert = function()
 {
+  /** 
+   * Convert a 32bit number to a string containing 32 characters: a 1 for each set bit and a 0 for each unset bit.  
+   * e.g. 666 --> "00000000000000000000001010011010"  
+   * -1337 --> "11111111111111111111101011000111"  
+   * (the javascript number type is actually a 64bit floating point number, so if you pass in anything which is not integral and outside the 32bit range for signed integers, the result may contain unexpected bits)    
+   * @memberof rlUtilsConvert 
+   * @function i32ToBinaryString
+   * @param {number} n the 32bit number to convert    
+   * @returns {string} a string containing 32 chars, each char being either a 1 or a 0 or "NaN" if n was not a number
+   */
   var i32tbs = function(n)
   { 
     var s = "";
