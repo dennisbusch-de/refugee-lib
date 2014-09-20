@@ -1,7 +1,11 @@
 ﻿// -----------------------------------------------------------------------------
 // Refugee Lib
 /** 
- * @file Library initialization. Provides functions to load all other script files, so a project using Refugee Lib only needs to include this file in a script tag.    
+ * @file A project using **Refugee Lib** needs to include only a single script:  
+ * `<script type="text/javascript" src="./script/rlBoot.js></script>`  
+ * Then utilize {@link rlBoot.bootRefugeeLib} to load and initialize the rest of the library.
+ *    
+ * example: {@tutorial 01-quickstart}  
  * contains: {@link rlBoot}  
  */ 
 // The MIT License (MIT)
@@ -28,7 +32,12 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
-/** 
+/**
+ * A project using **Refugee Lib** needs to include only a single script:  
+ * `<script type="text/javascript" src="./script/rlBoot.js></script>`  
+ * Then utilize {@link rlBoot.bootRefugeeLib} to load and initialize the rest of the library.  
+ *  
+ * example: {@tutorial 01-quickstart}  
  * @namespace 
  */
 var rlBoot = function()

@@ -28,6 +28,25 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * Keyboard input translation and state management for {@link rlEngine}.
+ *    
+ * A project using **Refugee Lib** should usually only use {@link rlInputEvent.getKeyState} (if it needs to query the keyboard state directly) or use the events it gets in a call of {@link rlEngine}.[onInputEvent]{@link rlEngine#onInputEvent} or a combination of both.  
+ *  
+ * **Refugee Lib** refers to "well known" keys by the following (string) IDs:  
+ * +   `Esc, PrintScreen, ScrollLock, Pause, Tab, CapsLock, NumLock, Backspace, Enter, Space`  
+ * +   `LeftShift, RightShift, LeftControl, RightControl, LeftAlt, RightAlt, LeftOS, RightOS`  
+ * +   `Insert, Home, PageUp, Delete, End, PageDown, Left, Up, Right, Down`  
+ * +   `F1 to F12` : for the function keys  
+ * +   `LA to LZ` : for standard latin letter keys  
+ * +   `D0 to D9` : for digits 0 to 9 on the main keyboard section  
+ * +   `N0 to N9` : for digits 0 to 9 on the number pad  
+ * +   `N/, N*, N-, N+, NEnter, ND` : for the operators, enter and decimal separator keys on the number pad
+ * +   **`Unknown`** : for keypresses which produce character input where the source key is not "well known" (which is true for most language-specific symbols and letters and depends on the system-level keyboard layout settings)    
+ *  
+ * If a key event produces printable character input, regardless of whether the key is "well known" or not to **Refugee Lib**, that printable character will be provided by {@link rlEngine}.[onInputEvent]{@link rlEngine#onInputEvent} in a property named *printableChar* on the *currentEvent* parameter. 
+ * @namespace
+ */
 var rlKeys = function()
 {
   var l = [ {}, {}, {}, {} ];
@@ -42,7 +61,21 @@ var rlKeys = function()
   
   var currentStateSize = 4;
   var unknownIdPrefix = "UC_";
+  
+  /** 
+   * @memberof rlKeys
+   * @constant
+   * @private 
+   * @default
+   */
   var unknownId = "Unknown";
+  
+  /**
+   * Get the id which is used for character input which originates from an unknown physical source key.
+   * @memberof rlKeys
+   * @function
+   * @returns {string}
+   */
   var getUnknownKeyId = function()
   {
     return unknownId;
@@ -95,8 +128,8 @@ var rlKeys = function()
     l[0][u] = "L"+u;
     l[0][u.toLowerCase()] = "L"+u; 
   }
-  l[0]["U+007F"] = "Del";
-  l[0]["Del"] = "Del";
+  l[0]["U+007F"] = "Delete";
+  l[0]["Del"] = "Delete";
   l[0]["End"] = "End";
   l[0]["PageDown"] = "PageDown";
   l[3]["Home"] = "N7";
@@ -146,6 +179,7 @@ var rlKeys = function()
   l[3]["0"] = "N0";
   l[3]["U+007F"] = "ND";
   l[3]["."] = "ND";
+  l[3][","] = "ND";
   l[3]["U+004E"] = "ND";
   l[3]["Del"] = "ND";
   l[3]["Decimal"] = "ND";
@@ -192,6 +226,14 @@ var rlKeys = function()
   // don't change/re-use k after this (it's used by checkPatchKeyState to dynamically
   // collect and add state bits for unknown keys at runtime)
   
+  /** 
+   * Get the **Refugee Lib** key ID for the given raw keyboard event ids.     
+   * @memberof rlKeys 
+   * @function
+   * @param {string} sourceId the browser-specific key id from a raw dom keyboard event
+   * @param {number} sourceLocation the browser-specific location from a raw dom keyboard event     
+   * @returns {string} a **Refugee Lib** key ID
+   */
   var getKeyId = function(sourceId, sourceLocation)
   { 
     if(typeof l[sourceLocation][sourceId] != "undefined")
@@ -199,12 +241,30 @@ var rlKeys = function()
     else
       return unknownId;
   };
-     
+  
+  /** 
+   * Create a key state object where all individual key states are "not down".     
+   * @memberof rlKeys 
+   * @function
+   * @returns {rlKeys.keyState} 
+   */   
   var createEmptyKeyState = function()
   { 
+    /**
+     * (currently internally implemented as a Uint32Array (implementation may change if necessary))
+     * @typedef keyState
+     * @memberof rlKeys
+     */
     return new Uint32Array(currentStateSize);
   };
   
+  /**
+   * Create a copy of a given key state.
+   * @memberof rlKeys
+   * @function
+   * @param {rlKeys.keyState} state
+   * @returns {rlKeys.keyState}
+   */
   var cloneKeyState = function(state)
   {        
     var r = createEmptyKeyState();
@@ -238,6 +298,15 @@ var rlKeys = function()
     return [bc, keyState, true];
   };
            
+  /**
+   * Set a bit of a given keyId in a given keyState.
+   * @memberof rlKeys
+   * @function
+   * @param {string} keyId a well known **Refugee Lib** key ID or a printable char
+   * @param {rlKeys.keyState} keyState the key state to modify
+   * @param {number} stateCode special code for internal key state magic (used by rlEngine to create a logical link between a keydown, a keypress and a keyup dom event to be able to internally manage an otherwise unknown physical key state)
+   * @returns {rlKeys.keyState} the modified key state
+   */
   var setKeyStateBit = function(keyId, keyState, stateCode)
   {   
     var r = checkPatchKeyState(keyId, keyState);
@@ -251,6 +320,15 @@ var rlKeys = function()
     return keyState; 
   };
   
+  /**
+   * Clear a bit of a given keyId in a given keyState.
+   * @memberof rlKeys
+   * @function
+   * @param {string} keyId a well known **Refugee Lib** key ID or a printable char
+   * @param {rlKeys.keyState} keyState the key state to modify
+   * @param {number} stateCode special code for internal key state magic (used by rlEngine to create a logical link between a keydown, a keypress and a keyup dom event to be able to internally remember an otherwise unknown physical key state)
+   * @returns {rlKeys.keyState} the modified key state
+   */
   var clearKeyStateBit = function(keyId, keyState, stateCode)
   { 
     var r = checkPatchKeyState(keyId, keyState);
@@ -310,6 +388,13 @@ var rlKeys = function()
     return keyState; 
   };
   
+  /**
+   * Clear all individual key state bits in a given keyState.
+   * @memberof rlKeys
+   * @function
+   * @param {rlKeys.keyState} keyState the state to modify
+   * @returns {rlKeys.keyState} the modified key state
+   */
   var clearWholeKeyState = function(keyState)
   { 
     var i;
@@ -318,7 +403,15 @@ var rlKeys = function()
     
     return keyState;
   };
-  
+    
+  /**
+   * Test if the bit for a given keyId is set in a given keyState.
+   * @memberof rlKeys
+   * @function
+   * @param {string} keyId a well known **Refugee Lib** key ID or a printable char
+   * @param {rlKeys.keyState} keyState the key state to examine   
+   * @returns {boolean} true if the bit is set, false if it is not
+   */
   var getKeyStateBit = function(keyId, keyState)
   {                                      
     var r = checkPatchKeyState(keyId, keyState);
@@ -336,6 +429,6 @@ var rlKeys = function()
     setKeyStateBit: setKeyStateBit,
     clearKeyStateBit: clearKeyStateBit,
     clearWholeKeyState: clearWholeKeyState,
-    getKeyState: getKeyStateBit
+    getKeyStateBit: getKeyStateBit
   }; 
 }();

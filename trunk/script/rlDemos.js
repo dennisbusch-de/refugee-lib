@@ -28,8 +28,31 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * "rlDemos.js" ({@link rlBoot.bootRefugeeLib} does not load this script by default) 
+ *  
+ * @namespace
+ */
 var rlDemos = new function()
 {
+  /**
+   * Instantiates and starts a simple Hello World {@link rlEngine} with moving, colorcycleing letters and an also colorcycleing background using the C64 palette and with the debug overlay turned on.
+   * @see <a href="../rlTemplate_HelloWorld.html" target="blank">a live example using this function</a>
+   * @memberof rlDemos
+   * @function
+   * @param {string} containerId as described in rlEngine constructor
+   * @param {string} engineName as described in rlEngine constructor
+   * @param {number} engineWidth as described in rlEngine constructor
+   * @param {number} engineHeight as described in rlEngine constructor
+   * @param {string} helloText the text to use for the moving letters
+   * @param {number} speedx the initial horizontal speed for the moving letters
+   * @param {number} speedy the initial vertical speed for the moving letters
+   * @param {number} fgCycle the logic updates delay between cycleing colors for the letters 
+   * @param {number} bgCycle the logic updates delay between cycleing colors for the background
+   * @param {number} charJitter the maximum in pixels for a random letter displacement from its current position on each view update
+   * @param {number} activationDelay the delay in logic updates before the next letter starts moving (they all start at the center of the view)
+   * @returns {rlEngine}
+   */
   var insertHelloWorldDemo = function(containerId, engineName, engineWidth, engineHeight, helloText, speedx, speedy, fgCycle, bgCycle, charJitter, activationDelay) 
   {
     var width = engineWidth;

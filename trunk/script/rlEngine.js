@@ -29,6 +29,27 @@
 // THE SOFTWARE.
 // -----------------------------------------------------------------------------
 
+/**
+ * Instantiate an object for easily handling an application/game main loop(gathering input and performing logic state and view updates at regular intervals).  
+ *  
+ * An engine will also provide two [Canvas]{@link https://developer.mozilla.org/en/docs/Web/HTML/Canvas} elements along with a webgl and a 2d context, ready-to-use in view updates.  
+ *  
+ * The canvas elements are layered in a way that the 2d canvas will be rendered on top of the webgl canvas.
+ *  
+ * The 2d canvas will also be used by the engine to display debug information (if enabled).
+ *  
+ * By default, the engine will instantiate and handle a timer running in a separate thread, so that logic updates can be performed even when the engine is not in the active browser-tab.
+ *  
+ * An engine starts in Paused state to allow setting the [onInputEvent]{@link rlEngine#onInputEvent}, [onUpdateLogic]{@link rlEngine#onUpdateLogic} and [onUpdateViews]{@link rlEngine#onUpdateViews} properties before calling [togglePause]{@link rlEngine#togglePause} to start it.
+ * @constructor
+ * @param {string} containerId the DOM id of an [Element]{@link https://developer.mozilla.org/en/docs/Web/API/element} into which to insert the engines views  
+ * @param {string} name the name of the engine as it appears in debug messages, if debug is enabled
+ * @param {boolean} debug set to true to enable debug messages and debug info to be displayed on view updates
+ * @param {number} width the width of the engines views in pixels
+ * @param {number} height the height of the engines views in pixels
+ * @param {boolean} [useOwnTimer=true] set to false to prevent the engine from instantiating and managing its own logic update timer 
+ * @returns {rlEngine}
+ */
 rlEngine = function(containerId, name, debug, width, height, useOwnTimer) 
 {
   // inherit all of rlObject
@@ -55,6 +76,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var Paused = true;
   var Debug = debug || false;
   var CursorImage = null;
+  var cix = 0, ciy = 0; // specifies which pixel of the CursorImage should be rendered at the mouse coordinates
   var CurrentUpdateRequestId = 0; // last requested id for the next browser animation frame
   var VUTick = 0;
   var LUTick = 0;
@@ -99,6 +121,11 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     canvasMain.style.borderWidth = Debug ? "2px" : "0px";
     canvasOverlay.style.borderWidth = Debug ? "2px" : "0px";
   };
+  
+  /**         
+   * Toggle the debug state.
+   * @function
+   */
   this.toggleDebug = toggleDebug;
            
   var forceAdjustMSPerLU = function(newMSPerLU)
@@ -107,7 +134,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     if(LogicTimer)
       LogicTimer.postMessage(MSPerLU);
   };
-  
+     
   var togglePause = function()
   {
     Paused = !Paused;
@@ -144,7 +171,19 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     
     return Paused;
   };
-  this.togglePause = togglePause; 
+  
+  /**         
+   * Toggle the Paused state. As long as an engine is paused, it will not call logic updates.  
+   * It will still gather input events and call view updates.
+   * @function
+   */                             
+  this.togglePause = togglePause;
+  
+  /**
+   * Get the Paused state.
+   * @function
+   * @returns {boolean}
+   */ 
   this.isPaused = function() { return Paused; };
   
   // keep track of performed number of logic updates
@@ -191,6 +230,13 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     updateLogicStats();
   };
   var updateWarning = true;
+  
+  /**
+   * Function signature for callbacks to use with [onUpdateLogic]{@link rlEngine#onUpdateLogic}.
+   * @callback rlEngine~callbackOnUpdateLogic
+   * @param {number} LUTick the logic update tick (increases by 1 with each logic update)
+   */
+  /** @member {rlEngine~callbackOnUpdateLogic} */ 
   this.onUpdateLogic = function(LUTick) 
   {
     if(Debug && updateWarning) 
@@ -199,7 +245,18 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       updateWarning = false;
     }
   };
-  this.forceUpdateLogic = function() { updateLogic(LUTick+1); };
+   
+  /**         
+   * Force a single logic update (even if the engine is in Paused state).
+   * @function
+   */
+  this.forceUpdateLogic = function() 
+  { 
+    LUTick++;
+    
+    // call user supplied update logic callback
+    myself.onUpdateLogic(LUTick);
+  };
 
   // keep track of performed number of render updates
   var updateRenderStats = function()
@@ -211,11 +268,38 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       LastFPSMeasureTime = rlCore.getTimestamp();
     }
   };
-      
-  var setCursorImage = function(newImage)
+          
+  var setCursorImage = function(newImage, cax, cay)
   { 
+    cix = cax;
+    ciy = cay;
     CursorImage = newImage;
+    
+    if(typeof CursorImage == "string")
+    {
+      canvasMain.style.cursor = CursorImage;
+      canvasOverlay.style.cursor = CursorImage;
+      canvasMain.style.cursor.x = cax;
+      canvasMain.style.cursor.y = cay;
+      canvasOverlay.style.cursor.x = cax;
+      canvasOverlay.style.cursor.y = cay;
+    }
+    else
+    {
+      canvasMain.style.cursor = "none";
+      canvasOverlay.style.cursor = "none"; 
+    }
   };
+  
+  /** 
+   * Set the image to use for rendering the mouse cursor while it is within the engines view area.  
+   * e.g.: `myEngine.setCursorImage(rlCursors.getDefaultCursorImage(), 0, 0);` to set it back to the built-in default cursor. 
+   * @see [HTMLImageElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLImageElement} | [rlCursors]{@link rlCursors}
+   * @function
+   * @param {HTMLImageElement|string} newImage the image to display as the mouse cursor (or a string to set the [cursor]{@link https://developer.mozilla.org/en/docs/Web/CSS/cursor} CSS property of the engines views) 
+   * @param {number} cax cursor active x: horizontal-axis position of the cursor images active pixel
+   * @param {number} cay cursor active y: vertical-axis position of the cursor images active pixel     
+   */
   this.setCursorImage = setCursorImage;
   
   // perform or skip a single view frame update
@@ -227,9 +311,9 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     myself.onUpdateViews(GL, G2D, time);
           
     // render cursor
-    if(CursorImage != null)
+    if(CursorImage != null && typeof CursorImage != "string")
     {
-      G2D.drawImage(CursorImage, cmx, cmy);
+      G2D.drawImage(CursorImage, cmx-cix, cmy-ciy);
     }
     
     // render debug overlay here if enabled 
@@ -298,6 +382,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       CurrentUpdateRequestId = window.requestAnimationFrame(updateViews);
   };
   var viewWarning = true;
+  
+  /**
+   * Function signature for callbacks to use with [onUpdateViews]{@link rlEngine#onUpdateVies}.  
+   * @callback rlEngine~callbackOnUpdateViews
+   * @param {WebGLRenderingContext} GL a [WebGLRenderingContext]{@link https://developer.mozilla.org/en/docs/Web/API/WebGLRenderingContext} for the lower layer of the engines view
+   * @param {CanvasRenderingContext2D} G2D a [CanvasRenderingContext2D]{@link https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D} for the upper layer of the engines view
+   * @param {DOMTimeStamp|DOMHighResTimeStamp} time a timestamp as provided by [requestAnimationFrame]{@link https://developer.mozilla.org/en/docs/Web/API/window.requestAnimationFrame}
+   */
+  /** @member {rlEngine~callbackOnUpdateViews} */
   this.onUpdateViews = function(GL, G2D, time) 
   {
     if(Debug && viewWarning)
@@ -313,6 +406,11 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     updateViews(rlCore.getTimestamp()); 
     renderSingleFrame = false;
   };
+  
+  /**         
+   * Force a single views update.
+   * @function
+   */
   this.forceUpdateViews = forceUpdateViews;
   
   var changeLUPS = function(newLUPSTarget)
@@ -333,6 +431,12 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     if(resume)
       togglePause();
   };
+  
+  /**
+   * Change the desired number of logic updates per second to perform. (Does not apply if the engine was prevented from managing its own timer at instantiation time.)
+   * @function
+   * @param {number} newLUPSTarget the desired number of logic updates per second
+   */
   this.changeLUPS = changeLUPS; 
        
   var prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent();
@@ -416,6 +520,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       cmx = rlMath.capValue(0, mx, Width-1);
       cmy = rlMath.capValue(0, my, Height-1);
       mInside = rlMath.p2DinRect({ x: event.clientX, y: event.clientY }, canvasRect);
+      var t = unifiedType.charAt(5);
        
       if(Debug)
       {  
@@ -426,12 +531,13 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
           canvasOverlay.style.borderColor = "#000000";
       }
       
-      if(unifiedType.charAt(5) == "d") // mousedown
+      if(t == "d") // mousedown
       {
         mb[rlInputEvent.translateMouseButtonId(event.button)] = true;
       }
-      if(unifiedType.charAt(5) == "u") // mouseup
-      {
+      if(t == "u") // mouseup
+      { 
+        buttonUp = true;
         mb[rlInputEvent.translateMouseButtonId(event.button)] = false;
         
         if(event.button == 2 && mInside) // prevent contextmenu if mouse is on canvas
@@ -440,7 +546,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
           event.stopPropagation();
         }
       }
-      if(unifiedType.charAt(5) == "w") // mousewheel
+      if(t == "w") // mousewheel
       {                     
         if(unifiedWheelInfo > 0)
           mb.wheelDown = true;
@@ -454,10 +560,10 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
         }
       } 
  
-      var mouseEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, "None", false, "");
+      var mouseEvent = rlInputEvent.createMouseKeyboardEvent("m"+t, LUTick, mx, my, cmx, cmy, mInside, mb, keys, "None", "");
       
       // call user defined event handler
-      myself.onInputEvent(mouseEvent, prevMouseKeyboardEvent);
+      myself.onInputEvent(prevMouseKeyboardEvent, mouseEvent);
       
       prevMouseKeyboardEvent = mouseEvent;
     } 
@@ -479,7 +585,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
         keys = rlKeys.clearKeyStateBit(stateId, keys, stateCode);
       }
         
-      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("mke", LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, t=="u", printableChar);
+      var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("k"+t, LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, printableChar);
       
       if((printableChar == "" && unifiedKeyId.indexOf("U+") == -1)||printableChar != "") // patchy solution to allow follow up "keypress" events to fire in Chrome (which are needed to get correct printable characters there)
       {
@@ -488,7 +594,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       }
                               
       // call user defined event handler
-      myself.onInputEvent(keyboardEvent, prevMouseKeyboardEvent);
+      myself.onInputEvent(prevMouseKeyboardEvent, keyboardEvent);
       
       prevMouseKeyboardEvent = keyboardEvent;
     }
@@ -496,7 +602,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     // KEYBOARD EVENT HANDLING end }     
   };
   var inputWarning = true;
-  this.onInputEvent = function(currentEvent, previousEvent) 
+  
+  /**
+   * Function signature for callbacks to use with [onInputEvent]{@link rlEngine#onInputEvent}.
+   * @callback rlEngine~callbackOnInputEvent
+   * @param {rlInputEvent.mouseKeyboardEvent} previousEvent
+   * @param {rlInputEvent.mouseKeyboardEvent} currentEvent
+   */
+  /** @member {rlEngine~callbackOnInputEvent} */
+  this.onInputEvent = function(previousEvent, currentEvent) 
   {
     if(Debug && inputWarning)
     {
@@ -504,12 +618,24 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       inputWarning = false;
     }
   };
+  
   this.onRawInputEvent = null; // allows handling DOM events directly
-    
+  
+  /**
+   * Get the current mouse and keyboard input state (as known by the last processed input event).
+   * @function
+   * @returns {rlInputEvent.mouseKeyboardEvent}
+   */
+  this.getInputState = function()
+  {
+    return prevMouseKeyboardEvent;
+  }; 
+   
   var clearInputState = function()
   {                                     
     mb = rlInputEvent.createEmptyMouseButtonState();
     keys = rlKeys.clearWholeKeyState(keys);
+    prevMouseKeyboardEvent = rlInputEvent.createEmptyMouseKeyboardEvent(); 
   };
   
   var handleRootEvent = function(event)
@@ -537,7 +663,7 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     
     canvasMain.style.cursor = "none";
     canvasOverlay.style.cursor = "none";
-    setCursorImage(rlCursors.getDefaultCursorImage());                   
+    setCursorImage(rlCursors.getDefaultCursorImage(), 0, 0);
 
     // context initialization
     GL = rlG.getContextGL(canvasMain);
@@ -551,7 +677,11 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     LogicTimer.onmessage = updateLogic;
   }
   
-  // provide function to call by any external timer on tick
+  /**
+   * Provided to be called by any external timer on tick (does nothing if engine is in Paused state).
+   * (Meant to be use by multiple engine instances sharing the same external timer.)
+   * @function
+   */
   this.manualTick = updateLogic;
   
   // initialize input handlers 

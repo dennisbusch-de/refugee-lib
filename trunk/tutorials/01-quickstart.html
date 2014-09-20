@@ -7,7 +7,43 @@
 </head>
 
 <body>
-The quickest way to get started using <b>Refugee Lib</b> is to load the <a href="../rlTemplate_HelloWorld.html">Hello World Template</a> and to view its source. :)
-</body>
+The quickest way to get started using <b>Refugee Lib</b> is to load the <a href="../rlTemplate_HelloWorld.html" target="blank">Hello World Template</a> and to view its source. :)
+<br><br>
+See also: <a href="rlBoot.html#bootRefugeeLib">rlBoot.bootRefugeeLib</a><br><br>
+Here is a basic <b>Refugee Lib</b> project template:
+<pre style="font-family: Courier;">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="Author" content="http://www.dennisbusch.de"&gt;
+    
+    &lt;title&gt;Refugee Lib Page Template&lt;/title&gt;
 
+    &lt;!-- include Refugee Lib --&gt;                     
+    &lt;script type="text/javascript" src="./script/rlBoot.js"&gt;&lt;/script&gt; 
+    
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id="divMain" style="display: table-cell; width: 400px; height: 300px; vertical-align: middle; text-align: center; color: #FFFFFF; background: #80C0E0;"&gt;
+    Please enable &lt;i&gt;javascript&lt;/i&gt; and then reload this page.
+    &lt;/div&gt;
+  
+    &lt;script type="text/javascript" defer&gt;           
+      var mainFunc = function(bootCode)
+      {   
+        if(bootCode == 0) // if library initialized successfully
+        {
+          // do stuff
+        }
+      };
+      
+      // initialize Refugee Lib
+      var additionalScripts = [];
+      rlBoot.bootRefugeeLib("divMain", additionalScripts, this, mainFunc, true);
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</body>
 </html>
