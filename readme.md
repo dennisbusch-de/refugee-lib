@@ -1,18 +1,20 @@
 # Refugee Lib
-(*early WIP (v.-1.0) / September 19th 2014 *)
-*this documentation is a work in progress and subject to be changed/extended as the library development progresses*
-
+[version](./rlCore.html#version) - 
+(*this documentation is a work in progress and subject to be changed/extended as the library development progresses*)
+  
 ## Introduction
 The goal of **Refugee Lib** is to provide an easy-to-use HTML5/javascript library for writing games and applications which primarily run directly inside a website without the need to download and install any extensions.
 
-**Refugee Lib** provides (*will provide*) functions to handle common tasks like loading assets, running and maintaining a steady game main-loop, pre-processing input from different devices and calling user-defined callbacks when it is time to update game-state and view.
+**Refugee Lib** provides functions to handle common tasks like loading assets, running and maintaining a steady game main-loop, pre-processing input from different devices and calling user-defined callbacks when it is time to update game-state and view.
 
-(A potential future expansion would be to add optional modules to utilize features which are only available to installable Chrome apps, such as direct access to UDP/TCP sockets and the local filesystem and other native-client and portable-native-client code.)
+(It also provides (*will provide*) functions to handle a broad range of other things commonly useful in game development, like managing animations, testing for collisions, playing sounds, string localization, lightweight GUI building, displaying graphics and whatever else I think will be interesting to implement and useful to have.)
 
+((A potential future expansion would be to add optional modules to utilize features which are only available to installable Chrome apps, such as direct access to UDP/TCP sockets and the local filesystem and other native-client and portable-native-client code.))
+  
 ## Source / Download
 The latest WIP version can be downloaded from the public SVN repository:  
 [https://code.google.com/p/refugee-lib/source/checkout](https://code.google.com/p/refugee-lib/source/checkout)
-
+  
 ## License
 Refugee Lib is an open source project, released under the "MIT License".
 
