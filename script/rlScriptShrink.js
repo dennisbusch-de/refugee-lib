@@ -31,12 +31,12 @@
 /**
  * "rlScriptShrink.js" ({@link rlBoot.bootRefugeeLib} does not load this script by default) 
  * 
- * @TODO add method to load, shrink and save in one step / loadFromURL(s), loadFromFile(s)
- * 
  * Experimental tokenization based script shrinking/expanding.  
  * **Limitation**: string constants containing a "@:" prefixed by one or
  * more of the modified base64 symbols may lead to those being recursively replaced when a shrunk
- * script is being expanded again.
+ * script is being expanded again.  
+ *  
+ * @TODO add method to load, shrink and save in one step / loadFromURL(s), loadFromFile(s)
  * @namespace
  */  
 var rlScriptShrink = function()
