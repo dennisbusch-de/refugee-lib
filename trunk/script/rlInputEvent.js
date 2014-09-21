@@ -183,7 +183,17 @@ var rlInputEvent = function()
   var isKeyDownEvent = function(previousEvent, currentEvent, keyIdOrChar)
   {      
     return !getKeyState(keyIdOrChar, previousEvent.keys) && getKeyState(keyIdOrChar, currentEvent.keys);
-  };
+  };  
+  
+  /**
+   * Test if a given keyId is active in a given keyState.
+   * @memberof rlInputEvent
+   * @function
+   * @param {string} keyId a well known **Refugee Lib** key ID or a printable char
+   * @param {rlKeys.keyState} keyState the key state to examine   
+   * @returns {boolean} true if the bit is set, false if it is not
+   */
+   var getKeyState = rlKeys.getKeyStateBit;
   
   return {
     createMouseKeyboardEvent: createMouseKeyboardEvent,
@@ -194,6 +204,6 @@ var rlInputEvent = function()
     isButtonDownEvent: isButtonDownEvent,
     isKeyUpEvent: isKeyUpEvent,
     isKeyDownEvent: isKeyDownEvent,
-    getKeyState: rlKeys.getKeyStateBit
+    getKeyState: getKeyState
   };
 }();
