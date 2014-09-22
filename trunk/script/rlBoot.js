@@ -49,6 +49,7 @@ var rlBoot = function()
 
   var regularBootScriptURLs = [
                                 "./script/3rdparty/webgl-utils.js",
+                                "./script/3rdparty/jszip.min.js", 
                                 "./script/rlG.js",
                                 "./script/rlMath.js",
                                 "./script/rlUtilsConvert.js",

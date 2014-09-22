@@ -9,11 +9,14 @@ The goal of **Refugee Lib** is to provide an easy-to-use HTML5/javascript librar
 
 (It also provides (*will provide*) functions to handle a broad range of other things commonly useful in game development, like managing animations, testing for collisions, playing sounds, string localization, lightweight GUI building, displaying graphics and whatever else I think will be interesting to implement and useful to have.)
 
-((A potential future expansion would be to add optional modules to utilize features which are only available to installable Chrome apps, such as direct access to UDP/TCP sockets and the local filesystem and other native-client and portable-native-client code.))
+((A potential future expansion would be to add optional modules to utilize features which are only available to installable Chrome apps or to a node-webkit bundle, such as direct access to UDP/TCP sockets and the local filesystem.))
   
 ## Source / Download
 The latest WIP version can be downloaded from the public SVN repository:  
 [https://code.google.com/p/refugee-lib/source/checkout](https://code.google.com/p/refugee-lib/source/checkout)
+
+## Third Party Libraries
+**JSZip** and **webgl-utils** are utilized and included by **Refugee Lib** under their respective licenses [as described here](https://refugee-lib.googlecode.com/svn/trunk/LICENSE.txt).
   
 ## License
 Refugee Lib is an open source project, released under the "MIT License".
