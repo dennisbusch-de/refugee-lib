@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="Author" content="http://www.dennisbusch.de">
+    
+    <title>Refugee Lib Example - using rlDataManager </title>
+
+    <!-- include "Refugee Lib" -->                     
+    <script type="text/javascript" src="./script/rlBoot.js"></script> 
+    
+  </head>
+  <body>
+    <div id="divMain" style="display: table-cell; width: 400px; height: 300px; vertical-align: middle; text-align: center; color: #FFFFFF; background: #80C0E0;">
+    Please enable <i>javascript</i> and then reload this page.
+    </div>
+  
+    <script type="text/javascript" defer>           
+      var mainFunc = function(bootCode)
+      { 
+        console.log("bootCode: "+bootCode);  
+        if(bootCode == 0)
+        {   
+          // initialize state
+          var width = 400, height = 300, fSize = 16, sY = 96, LUTick = 0; starttick = 50;
+          var pal = rlColors.getPalette("C64");
+          var started = false, loaded = false;
+          var state = { sx: 1.0, sy: 1.0, o: [] };
+          var i=0;
+          for(i=0; i<4; i++)
+            state.o.push({ x: width/8+Math.random()*6*width/8, y: height/8+Math.random()*6*height/8, sx: ((Math.random() <= 0.5) ? state.sx : -state.sx), sy: ((Math.random() <= 0.5) ? state.sy : -state.sy) }); 
+        
+          // initialize rlDataManager    
+          var dm = new rlDataManager();  
+          var filesToLoad = [
+                              { key:"spriteA", srcURL:"./data/g/rl.png" },
+                              { key:"spriteB", srcURL:"./data/g/princess.png", metadata: { s: "This is another test string." } },
+                              { key:"soundA", srcURL:"./data/s/bliplow.wav" },
+                              { key:"soundB", srcURL:"./data/s/bliphigh.wav" },
+                              { key:"zipA", srcURL:"./data/data.zip" }
+                            ];
+                                
+          dm.onloadprogress = function(itemsloaded, itemsFailed, itemsTotal) 
+          {
+          };
+          
+          dm.onloadfinished = function(itemsloaded, itemsFailed, itemsTotal) 
+          {
+            loaded = true;
+            
+            // explode the zip
+            dm.unzipAndCollectItems("zipA","A");
+          
+            // grab assets from the loaded data
+            state.o[0].img = rlDataObjectFactory.createImage(dm.getEntry("spriteA").item.getData());
+            state.o[1].img = rlDataObjectFactory.createImage(dm.getEntry("spriteB").item.getData());
+            state.o[2].img = rlDataObjectFactory.createImage(dm.getEntry("A/g/rl.png").item.getData());
+            state.o[3].img = rlDataObjectFactory.createImage(dm.getEntry("A/g/princess.png").item.getData());            
+            for(i=0; i<4; i++)
+              state.o[i].s = "(I have no metadata.)";
+              
+            state.o[0].s = dm.getEntry("spriteA").metadata.s;
+            state.o[1].s = dm.getEntry("spriteB").metadata.s;
+            state.o[2].s = dm.getEntry("A/g/rl.png").metadata.s+"(from zip)";
+              
+            state.audioLow = rlDataObjectFactory.createAudio(dm.getEntry("soundA").item.getData()); 
+            state.audioHigh = rlDataObjectFactory.createAudio(dm.getEntry("soundB").item.getData());
+            state.audioLow.volume = 0.1;
+            state.audioHigh.volume = 0.1;
+            
+            // release the loaded data
+            delete dm;
+          };
+        
+          // initialize rlEngine        
+          var myEngine = new rlEngine("divMain", "ExampleEngine", false, width, height);
+          myEngine.changeLUPS(32);
+            
+          myEngine.onUpdateLogic = function(tick) 
+          { 
+            LUTick = tick;   
+            if(tick == starttick)
+            {
+              dm.startload(filesToLoad);
+              started = true;
+            }
+            
+            for(i=0; i<4; i++)
+            {
+              state.o[i].x += state.o[i].sx;
+              state.o[i].y += state.o[i].sy;
+              if(state.o[i].x <= 0 || state.o[i].x >= width-1)
+              {
+                state.o[i].sx = -state.o[i].sx;
+                if(loaded)
+                {
+                  var a = state.o[i].sx < 0 ? state.audioLow : state.audioHigh;
+                  a.play();
+                }
+              }
+              if(state.o[i].y <= 0 || state.o[i].y >= height-1)
+              {
+                state.o[i].sy = -state.o[i].sy;
+                if(loaded)
+                {
+                  var a = state.o[i].sy < 0 ? state.audioLow : state.audioHigh;
+                  a.play();
+                }
+              }    
+            }
+          };
+              
+          myEngine.onUpdateViews = function(GL, G2D, time)
+          {          
+            GL.clearColor(pal["blue"].r, pal["blue"].g, pal["blue"].b, 1.0);
+            GL.clear(GL.COLOR_BUFFER_BIT);
+            
+            G2D.clearRect(0,0,width,height);
+            
+            // display data manager loading progress
+            G2D.font = "bold "+fSize+"px Courier";
+            G2D.textBaseline = "middle";
+            G2D.fillStyle = pal["white"].htmlCode;
+            G2D.textAlign = "left";
+            G2D.fillText("LUTick: "+LUTick, fSize, fSize);
+            G2D.textAlign = "center";
+            if(!started)
+              G2D.fillText("data manager starts loading at LUTick "+starttick, 200, sY);
+            
+            G2D.textAlign = "left"; 
+            G2D.fillStyle = dm.hasFinished()&&started ? pal["light green"].htmlCode : pal["light red"].htmlCode;
+            G2D.fillText(dm.hasFinished()&&started ? "data loaded" : "data not loaded", 20, sY+fSize*2);
+            G2D.fillStyle = pal["yellow"].htmlCode;
+            var i = 0;
+            var keys = dm.getKeys();
+            for(i = 0; i<keys.length; i++)
+            {
+              G2D.fillText(dm.getEntry(keys[i]).item.getLoadStateCompactString(), 20, sY+fSize*(3+i));
+            }
+            
+            // display objects
+            G2D.fillStyle = pal["light blue"].htmlCode;
+            G2D.textAlign = "center";
+            G2D.textBaseline = "middle";
+              
+            for(i=0; i<4; i++)
+            { 
+              var img = typeof state.o[i].img != "undefined" ? state.o[i].img : null;
+              var s = state.o[i].s;
+              var x = Math.round(state.o[i].x)-(img != null ? img.width/2 : 0);
+              var y = Math.round(state.o[i].y)-(img != null ? img.height/2 : 0);
+              if(img != null)
+              {
+                G2D.drawImage(img, x, y);
+                G2D.fillText(s, x, y + img.height/2+fSize*1.5);
+              }
+              else 
+                G2D.fillText(""+i, Math.round(state.o[i].x), Math.round(state.o[i].y));  
+            }
+          };
+          
+          myEngine.togglePause();
+        }
+      };
+            
+      var additionalScripts = [];
+      rlBoot.bootRefugeeLib("divMain", additionalScripts, this, mainFunc, true);
+    </script>
+  </body>
+</html>
