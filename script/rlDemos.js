@@ -61,9 +61,9 @@ var rlDemos = new function()
     var myEngine = new rlEngine(containerId, engineName, true, width, height);
     myEngine.changeLUPS(32);
     
-    var colC64 = rlColors.getPalette("C64");
+    var pal = rlColors.getPalette("C64");
                     
-    var state = { x: width/2, y: height/2, sx: speedx, sy: speedy, c:0, b:15, p: [] };
+    var state = { x: width/2, y: height/2, sx: speedx, sy: speedy, c:0, b:pal.length-1, p: [] };
     
     var textToDisplay = helloText;
     var i,j;
@@ -88,7 +88,7 @@ var rlDemos = new function()
           if(tick % fgCycle == 0)
           {  
             state.p[j].c++;
-            if(state.p[j].c>15) state.p[j].c = 0;
+            if(state.p[j].c>pal.length-1) state.p[j].c = 0;
           }
         }
       }
@@ -96,13 +96,13 @@ var rlDemos = new function()
       if(tick % fgCycle == 0)
       {
         state.c++;
-        if(state.c>15) state.c = 0; 
+        if(state.c>pal.length-1) state.c = 0; 
       }
         
       if(tick % bgCycle == 0)
       {
         state.b--;
-        if(state.b<0) state.b = 15;
+        if(state.b<0) state.b = pal.length-1;
       }
        
       if(tick % activationDelay == 0 && i<textToDisplay.length)
@@ -117,7 +117,7 @@ var rlDemos = new function()
       if(GL == null || G2D == null)
         return;                                
     
-      GL.clearColor(colC64[state.b].r,/* test comment for rlScriptShrink */ colC64[state.b].g,colC64[state.b].b, 1.0);
+      GL.clearColor(pal[state.b].r,/* test comment for rlScriptShrink */ pal[state.b].g,pal[state.b].b, 1.0);
       GL.clear(GL.COLOR_BUFFER_BIT);
     
       G2D.clearRect(0,0,width,height);
@@ -139,7 +139,7 @@ var rlDemos = new function()
           jx = -jitter + /* yet // another */ /* test comment for rlScriptShrink */ Math.random()*jitter*2;
           jy = -jitter + Math.random()*jitter*2; 
         }
-        G2D.fillStyle = colC64[ state.p[j].c].htmlCode;
+        G2D.fillStyle = pal[ state.p[j].c].htmlCode;
         G2D.fillText(textToDisplay.charAt(j), state.p[j].x+jx, state.p[j].y+jy);
       }
     };

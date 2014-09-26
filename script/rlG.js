@@ -109,6 +109,14 @@ var rlG = function()
    * @property {number} g green component (0.0 to 1.0)
    * @property {number} b blue component (0.0 to 1.0)
    */
+   
+  /** (not an actual type, use object literals with these properties)
+   * @typedef ypbpr
+   * @memberof rlG
+   * @property {number} y luma
+   * @property {number} pb difference between blue and luma 
+   * @property {number} pr difference between red and luma 
+   */ 
   
   /** 
    * Convert an HTML color string to an [rgb]{@link rlG.rgb} triplet.    
@@ -151,13 +159,69 @@ var rlG = function()
     }
     return h;
   };
+    
+  /**
+   * Convert an [rgb]{@link rlG.rgb} triplet to a [ypbpr]{@link rlG.ypbpr} triplet.
+   * @memberof rlG
+   * @function
+   * @param {rlG.rgb} rgb the triplet to convert, e.g. { r: 0.10, g: 0.03, b: 0.81 }
+   * @returns {rlG.ypbpr}
+   */
+  var colorRGBtoYPBPR = function(rgb)
+  {
+    return {  y:     0.299 * rgb.r +     0.587 * rgb.g +     0.114 * rgb.b, 
+             pb: -0.168736 * rgb.r + -0.331264 * rgb.g +       0.5 * rgb.b,
+             pr:       0.5 * rgb.r + -0.418688 * rgb.g + -0.081312 * rgb.b };
+  };
+  
+  /**
+   * Convert a [ypbpr]{@link rlG.ypbpr} triplet to an [rgb]{@link rlG.rgb} triplet.
+   * @memberof rlG
+   * @function
+   * @param {rlG.ypbpr} ypbpr the triplet to convert
+   * @returns {rlG.rgb}
+   */
+  var colorYPBPRtoRGB = function(ypbpr)
+  {
+    return { r: ypbpr.y +                            1.402 * ypbpr.pr, 
+             g: ypbpr.y + -0.344136 * ypbpr.pb + -0.714136 * ypbpr.pr,
+             b: ypbpr.y +     1.772 * ypbpr.pb };
+  };
+  
+  /**
+   * Convert a [ypbpr]{@link rlG.ypbpr} triplet to an HTML color string.
+   * @memberof rlG
+   * @function
+   * @param {rlG.ypbpr} ypbpr the triplet to convert
+   * @returns {string}
+   */
+  var colorYPBPRtoHTML = function(ypbpr)
+  {
+    return colorRGBtoHTML(colorYPBPRtoRGB(ypbpr));
+  };
+  
+  /**
+   * Convert an HTML color string to a [ypbpr]{@link rlG.ypbpr} triplet.
+   * @memberof rlG
+   * @function
+   * @param {string} htmlCode the html color string to convert, e.g. "#234266"
+   * @returns {rlG.ypbpr}
+   */
+  var colorHTMLtoYPBPR = function(htmlCode)
+  {
+    return colorRGBtoYPBPR(colorHTMLtoRGB(htmlCode));
+  };
   
   return {
     createCanvas: createCanvas, 
     getContextGL: getContextGL,
     getContext2D: getContext2D,
     colorHTMLtoRGB: colorHTMLtoRGB,
-    colorRGBtoHTML: colorRGBtoHTML
+    colorRGBtoHTML: colorRGBtoHTML,
+    colorRGBtoYPBPR: colorRGBtoYPBPR,
+    colorYPBPRtoRGB: colorYPBPRtoRGB,
+    colorYPBPRtoHTML: colorYPBPRtoHTML,
+    colorHTMLtoYPBPR: colorHTMLtoYPBPR
   };
 }();
 
@@ -166,6 +230,9 @@ var rlG = function()
  * @memberof rlPalette
  * @property {string} name the name to use for the color, e.g. "fullWhite"
  * @property {string} htmlCode the html code defining the color, e.g. "#FFFFFF"
+ * @property {number} [r=converted from htmlCode] the red component of a palette entry
+ * @property {number} [g=converted from htmlCode] the green component of a palette entry
+ * @property {number} [b=converted from htmlCode] the blue component of a palette entry
  */
 
 /**
@@ -176,16 +243,52 @@ var rlG = function()
  * So, a color in the palette is accessed as e.g. p["black"] or p[0] and each color in the palette
  * has the properties: name, index, htmlCode, r, g and b     
  * @constructor
- * @param {string} name the name of the palette
- * @param {rlPalette.namedColor[]} colors the array of color definitions to put into the palette
+ * @param {string} paletteName the name of the palette
+ * @param {rlPalette.namedColor[]|null} namedColors the array of color definitions to put into the palette (set to null to use the following parameter instead)
+ * @param {string} [colNameCodePairs] comma separated string with pairs of names and htmlcodes of colors eg. "black#000000,white#FFFFFF" (ignored if namedColors is used)
  */
-var rlPalette = function(name, colors ) // colors as array of { name, htmlCode } pairs
+var rlPalette = function(paletteName, namedColors, colNameCodePairs)
 {
   // inherit all of rlObject
   rlObject.call(this);
   this.__proto__.rlType = "rlPalette";
-
-  this.name = name;    
+    
+  /**
+   * @property {string} name the name of the palette
+   */
+  this.name = paletteName;
+  /** 
+   * @property {number} length the number of colors stored inside the palette
+   */
+  this.length = 0;
+  
+  /**
+   * Get a color by its name or index (same as using **this[nameOrIndex]** ). 
+   * @function 
+   * @property {string|number} nameOrIndex e.g. "white" or 15
+   * @returns {rlPalette.namedColor} the requested palette entry
+   */
+  this.getColor = function(nameOrIndex)
+  {
+    return this[nameOrIndex];
+  }; 
+  
+  var colors = [];
+  if(namedColors != null)
+  {
+    colors = namedColors;
+  }
+  else
+  {
+    var c = 0;
+    var namesAndCodes = colNameCodePairs.split(",");
+         
+    for(c=0; c<namesAndCodes.length; c++)
+    {
+      var pair = namesAndCodes[c].split("#");
+      colors.push( { name: pair[0].trim(), htmlCode: "#"+pair[1].trim() } );
+    }   
+  }    
 
   var i = 0;
   for(i=0; i<colors.length; i++)
@@ -200,41 +303,80 @@ var rlPalette = function(name, colors ) // colors as array of { name, htmlCode }
     this[cname].g = rgb.g;
     this[cname].b = rgb.b;
     this[i] = this[cname];
+    
+    this.length++;
   }   
 };
 
 /**
- * Builtin, ready-to-use color definitions.
+ * Builtin, ready-to-use color definitions (all trademarks are the property of their respective owners).
  * @namespace
  */
 var rlColors = function()
 {
-  // colors hexcodes borrowed from http://www.pepto.de/projects/colorvic/
-  var paletteC64 = new rlPalette("C64",
-                                 [ { name: "black",       htmlCode: "#000000" }, 
-                                   { name: "white",       htmlCode: "#FFFFFF" }, 
-                                   { name: "red",         htmlCode: "#68372B" }, 
-                                   { name: "cyan",        htmlCode: "#70A4B2" },
-                                   { name: "purple",      htmlCode: "#6F3D86" }, 
-                                   { name: "green",       htmlCode: "#588D43" }, 
-                                   { name: "blue",        htmlCode: "#352879" }, 
-                                   { name: "yellow",      htmlCode: "#B8C76F" },
-                                   { name: "orange",      htmlCode: "#6F4F25" }, 
-                                   { name: "brown",       htmlCode: "#433900" }, 
-                                   { name: "light red",   htmlCode: "#9A6759" }, 
-                                   { name: "dark grey",   htmlCode: "#444444" },
-                                   { name: "grey",        htmlCode: "#6C6C6C" }, 
-                                   { name: "light green", htmlCode: "#9AD284" }, 
-                                   { name: "light blue",  htmlCode: "#6C5EB5" }, 
-                                   { name: "light grey",  htmlCode: "#959595" } ]);
-  
+  // C64 colors hexcodes borrowed from http://www.pepto.de/projects/colorvic/
+  var palettes = [ new rlPalette("AMSTRADCPC", null,
+                     "black#000000,blue#000091,bright blue#0000FF,"+
+                     "red#910000,magenta#910091,violet#9100FF,"+
+                     "bright red#FF0000,purple#FF0091,bright magenta#FF00FF,"+
+                     "green#009100,cyan#009191,sky blue#0091FF,"+
+                     "yellow#919100,grey#919191,pale blue#9191FF,"+
+                     "orange#FF9100,pink#FF9191,pale magenta#FF91FF,"+
+                     "bright green#00FF00,sea green#00FF91,bright cyan#00FFFF,"+
+                     "lime green#91FF00,pale green#91FF91,pale cyan#91FFFF,"+
+                     "bright yellow#FFFF00,pale yellow#FFFF91,white#FFFFFF"),
+                   new rlPalette("APPLEII", null, 
+                     "black#040204,magenta#7C3A54,dark blue#54468C,purple#DC4EF4,"+
+                     "dark green#1C6A54,grey 1#949294,medium blue#34A6F4,light blue#CCC2FC,"+
+                     "brown#545E0C,orange#DC7A1C,grey 2#949294,pink#ECB6CC,"+
+                     "green#34CE1C,yellow#CCD29C,aqua#A4DECC,white#FCFEFC"),
+                   new rlPalette("C64", null, 
+                     "black#000000,white#FFFFFF,red#68372B,cyan#70A4B2,purple#6F3D86,"+
+                     "green#588D43,blue#352879,yellow#B8C76F,orange#6F4F25,"+
+                     "brown#433900,light red#9A6759,dark grey#444444,grey#6C6C6C,"+
+                     "light green#9AD284,light blue#6C5EB5,light grey#959595"),
+                   new rlPalette("CGA", null,
+                     "black#000000,low blue#0000B7,low green#00B700,low cyan#00B7B7,"+
+                     "low red#B70000,low magenta#B700B7,brown#B76800,light grey#B7B7B7,"+
+                     "dark grey#686868,high blue#6868FF,high green#68FF68,high cyan#68FFFF,"+
+                     "high red#FF6868,high magenta#FF68FF,yellow#FFFF68,white#FFFFFF"),  
+                   new rlPalette("GB", null, 
+                     "black#000000,dark grey#505050,light grey#A0A0A0,white#FFFFFF"),
+                   new rlPalette("MSX", null,
+                     "transparent#000000,black#000000,medium green#3EB849,light green#74D07D,"+
+                     "dark blue#5955E0,light blue#8076F1,dark red#B95E51,cyan#65DBEF,"+
+                     "medium red#DB6559,light red#FF897D,dark yellow#CCC35E,light yellow#DED087,"+
+                     "dark green#3AA241,magenta#B766B5,grey#CCCCCC,white#FFFFFF"),
+                   new rlPalette("TELETEXT", null, 
+                     "black#000000,blue#0000FF,green#00FF00,cyan#00FFFF,"+
+                     "red#FF0000,purple#FF00FF,yellow#FFFF00,white#FFFFFF"),
+                   new rlPalette("TO70/7", null,
+                     "black#000000,red#FF0000,green#00FF00,yellow#FFFF00,blue#0000FF,"+
+                     "purple#FF00FF,cyan#00FFFF,white#FFFFFF,grey#BBBBBB,"+
+                     "pale red#DD7777,pale green#77DD77,pale yellow#DDDD77,pale blue#7777DD,"+
+                     "pale purple#DD77EE,pale cyan#BBFFFF,orange#EEBB00"),
+                   new rlPalette("VIC20", null, 
+                     "black#000000,white#FFFFFF,red#782922,cyan#87D6DD,"+
+                     "purple#AA5FB6,green#55A049,blue#40318D,yellow#BFCE72,"+
+                     "orange#AA7449,light orange#EAB489,light red#B86962,light cyan#C7FFFF,"+
+                     "light purple#EA9FF6,light green#94E089,light blue#8071CC,light yellow#FFFFB2"),
+                   new rlPalette("ZXSPECTRUM", null,
+                     "black#000000,basic blue#000080,basic red#800000,basic magenta#800080,"+
+                     "basic green#008000,basic cyan#008080,basic yellow#808000,basic white#808080,"+
+                     "black#000000,bright blue#0000FF,bright red#FF0000,bright magenta#FF00FF,"+
+                     "bright green#00FF00,bright cyan#00FFFF,bright yellow#FFFF00,bright white#FFFFFF")
+                 ];
+                 
   var paletteIndex = {};
-  paletteIndex[paletteC64.name] = paletteC64;
+  
+  var p = 0;
+  for(p=0; p<palettes.length; p++)
+    paletteIndex[palettes[p].name] = palettes[p];
     
   /** 
-   * Get one of the built-in palettes of **Refugee Lib**.
-   * valid palette names are: "C64" (yep, just that one at this early dev stage)
-   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/}   
+   * Get one of the built-in well-known palettes of **Refugee Lib**.
+   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
+   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes}   
    * @memberof rlColors 
    * @function
    * @param {string} name the name of the palette to get    
