@@ -375,7 +375,7 @@ var rlColors = function()
     
   /** 
    * Get one of the built-in well-known palettes of **Refugee Lib**.
-   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
+   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, MSX, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
    * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes}   
    * @memberof rlColors 
    * @function
