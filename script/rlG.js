@@ -80,14 +80,16 @@ var rlG = function()
    */
   var getContextGL = function(canvas)
   { 
-    if(typeof canvas == "string")
-      return WebGLUtils.setupWebGL(document.getElementById(canvas));
-    if(typeof canvas == "object")
-      return WebGLUtils.setupWebGL(canvas);    
+    var cv = (typeof canvas == "string") ? document.getElementById(canvas) : ( canvas instanceof HTMLCanvasElement ? canvas : null);  
+  
+    if(cv != null)
+      return WebGLUtils.setupWebGL(cv);
+    else
+      return null;    
   };
   
   /** 
-   * Get the 2D rendering context for a given Canvas. 
+   * Get the 2D rendering context for a given Canvas (with imageSmoothingEnabled = false). 
    * @see [CanvasRenderingContext2D]{@link https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D} | [HTMLCanvasElement]{@link https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement}   
    * @memberof rlG 
    * @function
@@ -95,11 +97,17 @@ var rlG = function()
    * @returns {CanvasRenderingContext2D|null} a 2D rendering context or null if none is available 
    */
   var getContext2D = function(canvas)
-  {
-    if(typeof canvas == "string")
-      return document.getElementById(canvas).getContext("2d");
-    if(typeof canvas == "object")
-      return canvas.getContext("2d");
+  {         
+    var cv = (typeof canvas == "string") ? document.getElementById(canvas) : ( canvas instanceof HTMLCanvasElement ? canvas : null);
+  
+    if(cv != null)
+    {  
+      var c = cv.getContext("2d");
+      c.imageSmoothingEnabled = false; 
+      return c;
+    }
+    else
+      return null;
   };   
    
   /** (not an actual type, use object literals with these properties)
@@ -211,6 +219,70 @@ var rlG = function()
   {
     return colorRGBtoYPBPR(colorHTMLtoRGB(htmlCode));
   };
+   
+  /**
+   * Draw a polygon (defined as an array of 2-element arrays describing points in 2D cartesian space where each coordinate is normalized ranging from 0.0 to 1.0) in arbitrary width, height and colors. 
+   * @memberof rlG 
+   * @function
+   * @param {CanvasRenderingContext2D} G2D the 2D canvas context to use for drawing
+   * @param {_pointsarray_} points e.g [ [0.0,0.0],[0.5,0.0],[1.0,1.0] ] (would define a triangle)
+   * @param {number} the left pixel column at which to start drawing
+   * @param {number} the upper pixel row at which to start drawing
+   * @param {number} width the width in pixels to draw
+   * @param {number} height the height in pixels to draw
+   * @param {string|null} colF html color code for the fill color (null to disable filling)
+   * @param {string|null} colS html color code for the stroke color (null to disable stroke drawing)
+   * @param {number} [lineWidth=1.0] the width of the stroke in pixels
+   */
+  var drawNormalizedPolygon = function(G2D, points, sx, sy, width, height, colF, colS, lineWidth)
+  {
+    G2D.fillStyle = colF != null ? colF : "#FFFFFF";
+    G2D.strokeStyle = colS != null ? colS : "#000000";
+    G2D.lineWidth = typeof lineWidth != "undefined" ? lineWidth : 1.0;
+    
+    G2D.beginPath();
+    var p = 0;
+    var off = 0.5; // offset to pixel center relative to a pixels upper left corner
+    var w =  width - off;
+    var h = height - off;
+    for(p=0; p<points.length; p++)
+    {
+      if(p==0)
+        G2D.moveTo(Math.floor(sx+points[p][0]*w)+off,Math.floor(sy+points[p][1]*h)+off);
+      else
+      {
+        G2D.lineTo(Math.floor(sx+points[p][0]*w)+off,Math.floor(sy+points[p][1]*h)+off);
+      }
+    }
+    
+    G2D.closePath();
+    
+    if(colF != null)
+      G2D.fill();
+      
+    if(colS != null)
+      G2D.stroke(); 
+  };
+  
+  /**
+   * Draw the **Refugee Lib** logo.
+   * @memberof rlG
+   * @function
+   * @param {CanvasRenderingContext2D} G2D the 2D canvas context to use for drawing
+   * @param {number} the left pixel column at which to start drawing
+   * @param {number} the upper pixel row at which to start drawing
+   * @param {number} width the width in pixels to draw
+   * @param {number} height the height in pixels to draw
+   * @param {string} colA html color code for the base shape color
+   * @param {string} colB html color code for the letters color    
+   */
+  var drawRefugeeLibLogo = function(G2D, sx, sy, width, height, colA, colB) 
+  {
+    var data = rlCore.getLogoData();
+    var p = 0;
+    for(p=0; p<data.length; p++)
+      drawNormalizedPolygon(G2D, data[p], sx, sy, width, height, p % 2 == 0 ? colA : colB, p % 2 == 0 ? colA : colB, 1.0);
+  };  
   
   return {
     createCanvas: createCanvas, 
@@ -221,7 +293,9 @@ var rlG = function()
     colorRGBtoYPBPR: colorRGBtoYPBPR,
     colorYPBPRtoRGB: colorYPBPRtoRGB,
     colorYPBPRtoHTML: colorYPBPRtoHTML,
-    colorHTMLtoYPBPR: colorHTMLtoYPBPR
+    colorHTMLtoYPBPR: colorHTMLtoYPBPR,
+    drawNormalizedPolygon: drawNormalizedPolygon,
+    drawRefugeeLibLogo: drawRefugeeLibLogo
   };
 }();
 
@@ -403,21 +477,13 @@ var rlCursors = function()
     var ca = rlG.createCanvas(null, "rlDefaultCursorCanvas", width, height, 1000, "1px", "solid", "#FF00FF");
     ca.style.background = "transparent";
     
-    var c = rlG.getContext2D(ca);
-    c.fillStyle = "#FFFFFF";
-    c.strokeStyle = "#000000";
-    c.lineWidth = 1.0;
-    c.beginPath();
-    c.moveTo(0,0);
-    c.lineTo(0,height*1.0);
-    c.lineTo(width*0.375, height*0.59375);
-    c.lineTo(width*0.75, height*1.0);
-    c.lineTo(width*1.0, height*0.75);
-    c.lineTo(width*0.625, height*0.40625);
-    c.lineTo(width*1.0, 0);
-    c.closePath();
-    c.fill();
-    c.stroke();
+    var c = rlG.getContext2D(ca); 
+    var points = [ [0.0,0.0],[0,0.75],[0.25,0.50],[0.75,1.00],[1.0,0.75],[0.50,0.25],[0.75,0.0] ];
+    
+    var p = 0;
+    var w =  width - ( width & 1 == 1 ? 0.0 : 1.0);
+    var h = height - (height & 1 == 1 ? 0.0 : 1.0);
+    rlG.drawNormalizedPolygon(c, points, 0.0, 0.0, w, h, "#FFFFFF", "#000000", 1.0);
  
     var img = document.createElement("img");
     img.src = ca.toDataURL("image/png");   
@@ -431,7 +497,7 @@ var rlCursors = function()
    * @private 
    * @default
    */
-  var defCursorSideLength = 16;
+  var defCursorSideLength = 18;
   
   var defaultCursorImage = makeDefaultCursorImage(defCursorSideLength, defCursorSideLength);
           

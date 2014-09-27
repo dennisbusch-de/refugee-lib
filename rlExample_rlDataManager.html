@@ -22,7 +22,7 @@
         if(bootCode == 0)
         {   
           // initialize state
-          var width = 400, height = 300, fSize = 16, sY = 96, LUTick = 0; starttick = 50;
+          var width = 400, height = 300, fSize = 16, sY = 96, LUTick = 0; starttick = 50, LUPS = 32;
           var pal = rlColors.getPalette("C64");
           var started = false, loaded = false;
           var state = { sx: 1.0, sy: 1.0, o: [] };
@@ -74,7 +74,7 @@
         
           // initialize rlEngine        
           var myEngine = new rlEngine("divMain", "ExampleEngine", false, width, height);
-          myEngine.changeLUPS(32);
+          myEngine.changeLUPS(LUPS);
             
           myEngine.onUpdateLogic = function(tick) 
           { 
@@ -147,8 +147,8 @@
             { 
               var img = typeof state.o[i].img != "undefined" ? state.o[i].img : null;
               var s = state.o[i].s;
-              var x = Math.round(state.o[i].x)-(img != null ? img.width/2 : 0);
-              var y = Math.round(state.o[i].y)-(img != null ? img.height/2 : 0);
+              var x = Math.round(state.o[i].x -(img != null ? img.width/2 : 0));
+              var y = Math.round(state.o[i].y -(img != null ? img.height/2 : 0));
               if(img != null)
               {
                 G2D.drawImage(img, x, y);

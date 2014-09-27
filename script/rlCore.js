@@ -98,7 +98,7 @@ rlCore = function() {
    * @private 
    * @default
    */
-  var version = "Refugee Lib v.0.01b";
+  var version = "Refugee Lib v.0.01c";
 
   /**    
    * @memberof rlCore 
@@ -109,7 +109,25 @@ rlCore = function() {
   {
     return version;
   };
-
+  
+  // normalized polygon definitions for rendering the Refugee Lib logo in arbitrary dimensions
+  var logoBG = [ [0.11,0.0],[0.88,0.0],[1.0,0.11],[1.0,0.88],[0.88,1.0],[0.11,1.0],[0.0,0.88],[0.0,0.11] ];
+  var logoRO = [ [0.12,0.12],[0.40,0.12],[0.47,0.19],[0.47,0.44],[0.42,0.49],[0.42,0.50],[0.47,0.55],[0.47,0.87],[0.36,0.87],[0.36,0.60],[0.31,0.55],[0.23,0.55],[0.23,0.87],[0.12,0.87] ];
+  var logoRI = [ [0.24,0.24],[0.31,0.24],[0.35,0.28],[0.35,0.39],[0.31,0.43],[0.24,0.43] ];
+  var logoL  = [ [0.63,0.12],[0.67,0.12],[0.67,0.76],[0.87,0.76],[0.87,0.80],[0.80,0.87],[0.56,0.87],[0.56,0.19] ];   
+  
+  /**
+   * Get an object containing polygon data for rendering the **Refugee Lib** logo at an arbitrary size.  
+   * Returns an array [ bg, rOuter, rInner, l ] where each of the elements is an array of points which are themselves arrays of two elements, containing x and y coordinates (each normalized (0.0 to 1.0)), defining a polygon.  
+   * @see {@link rlG.drawNormalizedPolygon} | {@link rlG.drawRefugeeLibLogo}
+   * @memberof rlCore
+   * @function
+   */
+  var getLogoData = function()
+  {
+    return [ logoBG, logoRO, logoRI, logoL ];
+  };
+  
   /**
    * @see [DOMHighResTimeStamp]{@link https://developer.mozilla.org/en/docs/Web/API/DOMHighResTimeStamp} | [Date.now()]{@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Date/now}     
    * @memberof rlCore 
@@ -126,7 +144,8 @@ rlCore = function() {
   
   return {
     getVersionString: getVersionString,
-    getTimestamp: getTimestamp
+    getTimestamp: getTimestamp,
+    getLogoData: getLogoData
   };
 }();
 
