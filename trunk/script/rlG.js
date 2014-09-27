@@ -226,8 +226,8 @@ var rlG = function()
    * @function
    * @param {CanvasRenderingContext2D} G2D the 2D canvas context to use for drawing
    * @param {_pointsarray_} points e.g [ [0.0,0.0],[0.5,0.0],[1.0,1.0] ] (would define a triangle)
-   * @param {number} the left pixel column at which to start drawing
-   * @param {number} the upper pixel row at which to start drawing
+   * @param {number} sx the left pixel column at which to start drawing
+   * @param {number} sy the upper pixel row at which to start drawing
    * @param {number} width the width in pixels to draw
    * @param {number} height the height in pixels to draw
    * @param {string|null} colF html color code for the fill color (null to disable filling)
@@ -269,8 +269,8 @@ var rlG = function()
    * @memberof rlG
    * @function
    * @param {CanvasRenderingContext2D} G2D the 2D canvas context to use for drawing
-   * @param {number} the left pixel column at which to start drawing
-   * @param {number} the upper pixel row at which to start drawing
+   * @param {number} sx the left pixel column at which to start drawing
+   * @param {number} sy the upper pixel row at which to start drawing
    * @param {number} width the width in pixels to draw
    * @param {number} height the height in pixels to draw
    * @param {string} colA html color code for the base shape color
