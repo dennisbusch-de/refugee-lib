@@ -71,10 +71,17 @@ var rlDemos = new function()
     {
       state.p.push({ x: state.x, y: state.y, sx: state.sx, sy: state.sy, c: 0, active: false });
     }
+    
+    // for the logos
+    var slmin = 15, slmax = 63, sgg = 1.1;
+    state.p.push({ x: state.x, y: state.y, sx: -state.sx, sy: -state.sy, c: 0, active: false, s: 15, sg: 1.0/sgg });
+    state.p.push({ x: state.x, y: state.y, sx: -state.sx, sy: state.sy, c: 0, active: false, s: 31, sg: sgg });
+    state.p.push({ x: state.x, y: state.y, sx: state.sx, sy: -state.sy, c: 0, active: false, s: 63, sg: 1.0/sgg });
+    
     i=0;    
     myEngine.onUpdateLogic = function(tick) 
     {    
-      for(j=0; j<textToDisplay.length; j++)
+      for(j=0; j<state.p.length; j++)
       { 
         if(state.p[j].active)
         {                     
@@ -84,12 +91,28 @@ var rlDemos = new function()
             state.p[j].sx = -state.p[j].sx;
           if(state.p[j].y < 0 || state.p[j].y >= height)
             state.p[j].sy = -state.p[j].sy;
-            
-          if(tick % fgCycle == 0)
+          
+          if(j<textToDisplay.length) // letter ?
           {  
-            state.p[j].c++;
-            if(state.p[j].c>pal.length-1) state.p[j].c = 0;
+            if(tick % fgCycle == 0)
+            {  
+              state.p[j].c++;
+              if(state.p[j].c>pal.length-1) state.p[j].c = 0;
+            }
           }
+          else // logo?
+          {
+            state.p[j].s *= state.p[j].sg;
+            if(state.p[j].s <= slmin || state.p[j].s >= slmax)
+              state.p[j].sg = 1.0/state.p[j].sg;
+              
+            if(tick % fgCycle == 0)
+            {
+              state.p[j].c++;
+              if(state.p[j].c>pal.length-1) state.p[j].c = 0;
+            }
+          }
+          
         }
       }
       
@@ -105,7 +128,7 @@ var rlDemos = new function()
         if(state.b<0) state.b = pal.length-1;
       }
        
-      if(tick % activationDelay == 0 && i<textToDisplay.length)
+      if(tick % activationDelay == 0 && i<state.p.length)
       { 
         state.p[i].active = true;
         i++;  
@@ -117,30 +140,35 @@ var rlDemos = new function()
       if(GL == null || G2D == null)
         return;                                
     
-      GL.clearColor(pal[state.b].r,/* test comment for rlScriptShrink */ pal[state.b].g,pal[state.b].b, 1.0);
+      GL.clearColor(pal[state.b].r, pal[state.b].g,pal[state.b].b, 1.0);
       GL.clear(GL.COLOR_BUFFER_BIT);
     
       G2D.clearRect(0,0,width,height);
-      G2D.font = "bold 32px Lucida Console"; // another test comment for rlScriptShrink
+      G2D.font = "bold 32px Lucida Console";
       G2D.textAlign = "center";
       G2D.textBaseline = "middle";
       G2D.shadowBlur = 0;
-                   
-      // var jx = 0; ok lets have one more test comment 
-      /* and another one for thorough testing
-      var jy = 0; */
-      
+        
       var jx = 0;
       var jy = 0;  
-      for(j=0; j<textToDisplay.length; j++)
+      for(j=0; j<state.p.length; j++)
       {                               
         if(jitter > 0.0)
         {
-          jx = -jitter + /* yet // another */ /* test comment for rlScriptShrink */ Math.random()*jitter*2;
+          jx = -jitter + Math.random()*jitter*2;
           jy = -jitter + Math.random()*jitter*2; 
         }
-        G2D.fillStyle = pal[ state.p[j].c].htmlCode;
-        G2D.fillText(textToDisplay.charAt(j), state.p[j].x+jx, state.p[j].y+jy);
+        
+        if(j<textToDisplay.length) // letter?
+        {
+          G2D.fillStyle = pal[ state.p[j].c].htmlCode;
+          G2D.fillText(textToDisplay.charAt(j), state.p[j].x+jx, state.p[j].y+jy);
+        }
+        else // logo?
+        { 
+          rlG.drawRefugeeLibLogo(G2D, Math.round(state.p[j].x+jx-state.p[j].s/2), Math.round(state.p[j].y+jy-state.p[j].s/2), 
+                                 state.p[j].s, state.p[j].s, pal[(state.b+pal.length/2)%pal.length].htmlCode, pal[state.p[j].c].htmlCode);  
+        }
       }
     };
     
