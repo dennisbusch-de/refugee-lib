@@ -62,7 +62,12 @@ var rlDemos = new function()
     var myEngine = new rlEngine(containerId, engineName, false, width, height);
     myEngine.changeLUPS(32);
     
+    var palNames = rlColors.getPaletteNames();
+    var palI = 0;
     var pal = rlColors.hasPalette(paletteName) ? rlColors.getPalette(paletteName) : rlColors.getPalette("CGA");
+    for(palI=0; palI<palNames.length; palI++)
+      if(palNames[palI] == pal.name)
+        break;    
                         
     var state = { x: width/2, y: height/2, sx: speedx, sy: speedy, c:0, b:pal.length-1, p: [] };
     
@@ -168,10 +173,11 @@ var rlDemos = new function()
       GL.clear(GL.COLOR_BUFFER_BIT);
     
       G2D.clearRect(0,0,width,height);
+      G2D.shadowBlur = 0;
+      
       G2D.font = "bold 32px Courier";
       G2D.textAlign = "center";
       G2D.textBaseline = "middle";
-      G2D.shadowBlur = 0;
           
       for(j=0; j<state.p.length; j++)
       {                               
@@ -190,6 +196,37 @@ var rlDemos = new function()
         { 
           rlG.drawRefugeeLibLogo(G2D, Math.round(state.p[j].x+jx-state.p[j].s/2), Math.round(state.p[j].y+jy-state.p[j].s/2), 
                                  state.p[j].s, state.p[j].s, pal[(Math.floor(state.b+pal.length/2))%pal.length].htmlCode, pal[state.p[j].c].htmlCode);  
+        }
+      }
+      
+      G2D.font = "normal 12px Courier";
+      G2D.textAlign = "center";
+      G2D.textBaseline = "middle";      
+      G2D.fillStyle = rlG.colorHTMLtoYPBPR(pal[state.b].htmlCode).y < 0.5 ? "#FFFFFF" : "#000000";
+      G2D.fillText("palette(arrow left/right to change): "+palNames[palI], width/2, height-12);
+    };
+    
+    myEngine.onInputEvent = function(pE, cE)
+    { 
+      var updatePal = false;
+      if(rlInputEvent.isKeyDownEvent(pE,cE, "Right"))
+      {
+        palI = (palI + 1) % palNames.length;
+        updatePal = true;
+      }
+      if(rlInputEvent.isKeyDownEvent(pE,cE, "Left"))
+      {
+        palI = ((palI - 1 < 0) ? palNames.length-1 : palI - 1);
+        updatePal = true;
+      }
+      
+      if(updatePal)
+      {
+        pal = rlColors.getPalette(palNames[palI]);
+        state.b = state.b % pal.length;
+        for(j=0; j<state.p.length; j++)
+        {
+          state.p[j].c = j % pal.length;
         }
       }
     };
