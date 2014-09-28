@@ -442,10 +442,14 @@ var rlColors = function()
                  ];
                  
   var paletteIndex = {};
+  var names = [];
   
   var p = 0;
   for(p=0; p<palettes.length; p++)
+  {
     paletteIndex[palettes[p].name] = palettes[p];
+    names.push(palettes[p].name);
+  }
     
   /** 
    * Get one of the built-in well-known palettes of **Refugee Lib**.
@@ -460,9 +464,36 @@ var rlColors = function()
   {
     return paletteIndex[name];
   };
+   
+  /**
+   * Test if there is a built-in palette with the given name.
+   * @memberof rlColors
+   * @function
+   * @param {string} name the name of the palette to test
+   * @returns {boolean}
+   */
+  var hasPalette = function(name)
+  { 
+    return (typeof paletteIndex[name] != "undefined");
+  };
+  
+  /**
+   * Get an array of all built-in palette names.
+   * @memberof rlColors
+   * @function
+   * @returns {string[]}
+   */  
+  var getPaletteNames = function()
+  {
+    return [].concat(names);
+  };
+  console.log(getPaletteNames());
+  
                                                      
   return {
-    getPalette: getPalette
+    getPalette: getPalette,
+    hasPalette: hasPalette,
+    getPaletteNames: getPaletteNames
   };  
 }();
 
