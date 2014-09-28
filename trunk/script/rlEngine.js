@@ -120,6 +120,8 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     
     canvasMain.style.borderWidth = Debug ? "2px" : "0px";
     canvasOverlay.style.borderWidth = Debug ? "2px" : "0px";
+    
+    canvasOverlay.style.borderColor = mInside ? "#FFFFFF" : "#000000";
   };
   
   /**         
@@ -583,6 +585,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
       if(t=="u") // keyup
       {
         keys = rlKeys.clearKeyStateBit(stateId, keys, stateCode);
+        
+        // handle engine commands
+        if(mInside)
+        {
+          if(stateId == "ScrollLock")
+            myself.toggleDebug();
+          if(stateId == "Pause")
+            myself.togglePause(); 
+        }
       }
         
       var keyboardEvent = rlInputEvent.createMouseKeyboardEvent("k"+t, LUTick, mx, my, cmx, cmy, mInside, mb, keys, rlKeyId, printableChar);

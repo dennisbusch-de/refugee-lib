@@ -36,7 +36,7 @@
 var rlDemos = new function()
 {
   /**
-   * Instantiates and starts a simple Hello World {@link rlEngine} with moving, colorcycleing letters and an also colorcycleing background using the C64 palette and with the debug overlay turned on.
+   * Instantiates and starts a simple Hello World {@link rlEngine} with moving, colorcycleing letters and an also colorcycleing background using the given palette and with the debug overlay turned off.
    * @see <a href="../rlTemplate_HelloWorld.html" target="blank">a live example using this function</a>
    * @memberof rlDemos
    * @function
@@ -45,6 +45,7 @@ var rlDemos = new function()
    * @param {number} engineWidth as described in rlEngine constructor
    * @param {number} engineHeight as described in rlEngine constructor
    * @param {string} helloText the text to use for the moving letters
+   * @param {string} paletteName the name of the well-known palette to use ( {@link rlColors} )
    * @param {number} speedx the initial horizontal speed for the moving letters
    * @param {number} speedy the initial vertical speed for the moving letters
    * @param {number} fgCycle the logic updates delay between cycleing colors for the letters 
@@ -53,16 +54,16 @@ var rlDemos = new function()
    * @param {number} activationDelay the delay in logic updates before the next letter starts moving (they all start at the center of the view)
    * @returns {rlEngine}
    */
-  var insertHelloWorldDemo = function(containerId, engineName, engineWidth, engineHeight, helloText, speedx, speedy, fgCycle, bgCycle, charJitter, activationDelay) 
+  var insertHelloWorldDemo = function(containerId, engineName, engineWidth, engineHeight, helloText, paletteName, speedx, speedy, fgCycle, bgCycle, charJitter, activationDelay) 
   {
     var width = engineWidth;
     var height = engineHeight;
     var jitter = charJitter;        
-    var myEngine = new rlEngine(containerId, engineName, true, width, height);
+    var myEngine = new rlEngine(containerId, engineName, false, width, height);
     myEngine.changeLUPS(32);
     
-    var pal = rlColors.getPalette("C64");
-                    
+    var pal = rlColors.hasPalette(paletteName) ? rlColors.getPalette(paletteName) : rlColors.getPalette("CGA");
+                        
     var state = { x: width/2, y: height/2, sx: speedx, sy: speedy, c:0, b:pal.length-1, p: [] };
     
     var textToDisplay = helloText;
@@ -77,23 +78,46 @@ var rlDemos = new function()
     state.p.push({ x: state.x, y: state.y, sx: -state.sx, sy: -state.sy, c: 0, active: false, s: 15, sg: 1.0/sgg });
     state.p.push({ x: state.x, y: state.y, sx: -state.sx, sy: state.sy, c: 0, active: false, s: 31, sg: sgg });
     state.p.push({ x: state.x, y: state.y, sx: state.sx, sy: -state.sy, c: 0, active: false, s: 63, sg: 1.0/sgg });
+
+    // for jitter
+    var jx = 0;
+    var jy = 0;
     
-    i=0;    
+    // for speed vectors of follow up letters
+    var dx = 0;
+    var dy = 0;
+    var dl = 0;    
+    
+    i=0; // for delayed object activation    
+    
     myEngine.onUpdateLogic = function(tick) 
     {    
       for(j=0; j<state.p.length; j++)
       { 
         if(state.p[j].active)
-        {                     
-          state.p[j].x += state.p[j].sx;
-          state.p[j].y += state.p[j].sy;
-          if(state.p[j].x < 0 || state.p[j].x >= width)
-            state.p[j].sx = -state.p[j].sx;
-          if(state.p[j].y < 0 || state.p[j].y >= height)
-            state.p[j].sy = -state.p[j].sy;
+        { 
+          if(j==0 || j>=textToDisplay.length)
+          {                         
+            
+            state.p[j].x += state.p[j].sx;
+            state.p[j].y += state.p[j].sy;
+            if(state.p[j].x < 0 || state.p[j].x >= width)
+              state.p[j].sx = -state.p[j].sx;
+            if(state.p[j].y < 0 || state.p[j].y >= height)
+              state.p[j].sy = -state.p[j].sy;
+          }
           
           if(j<textToDisplay.length) // letter ?
-          {  
+          {
+            if(j>0)
+            { 
+              dx = state.p[j-1].x - state.p[j].x;
+              dy = state.p[j-1].y - state.p[j].y;
+              da = Math.sqrt(dx*dx + dy*dy); 
+              state.p[j].x += da/activationDelay * dx / da;
+              state.p[j].y += da/activationDelay * dy / da;
+            }
+            
             if(tick % fgCycle == 0)
             {  
               state.p[j].c++;
@@ -144,13 +168,11 @@ var rlDemos = new function()
       GL.clear(GL.COLOR_BUFFER_BIT);
     
       G2D.clearRect(0,0,width,height);
-      G2D.font = "bold 32px Lucida Console";
+      G2D.font = "bold 32px Courier";
       G2D.textAlign = "center";
       G2D.textBaseline = "middle";
       G2D.shadowBlur = 0;
-        
-      var jx = 0;
-      var jy = 0;  
+          
       for(j=0; j<state.p.length; j++)
       {                               
         if(jitter > 0.0)
@@ -167,7 +189,7 @@ var rlDemos = new function()
         else // logo?
         { 
           rlG.drawRefugeeLibLogo(G2D, Math.round(state.p[j].x+jx-state.p[j].s/2), Math.round(state.p[j].y+jy-state.p[j].s/2), 
-                                 state.p[j].s, state.p[j].s, pal[(state.b+pal.length/2)%pal.length].htmlCode, pal[state.p[j].c].htmlCode);  
+                                 state.p[j].s, state.p[j].s, pal[(Math.floor(state.b+pal.length/2))%pal.length].htmlCode, pal[state.p[j].c].htmlCode);  
         }
       }
     };
