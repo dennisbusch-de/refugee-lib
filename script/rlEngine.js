@@ -592,7 +592,15 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
           if(stateId == "ScrollLock")
             myself.toggleDebug();
           if(stateId == "Pause")
-            myself.togglePause(); 
+          { 
+            // alternate Debug toggle for keyboards which lack ScrollLock key
+            if(rlInputEvent.getKeyState("LeftAlt", keys) || 
+               rlInputEvent.getKeyState("RightAlt", keys) ||
+               rlInputEvent.getKeyState("ReleaseAlt", keys))
+              myself.toggleDebug();
+            else            
+              myself.togglePause();
+          } 
         }
       }
         
