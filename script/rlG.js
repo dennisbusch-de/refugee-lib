@@ -282,6 +282,28 @@ var rlG = function()
     var p = 0;
     for(p=0; p<data.length; p++)
       drawNormalizedPolygon(G2D, data[p], sx, sy, width, height, p % 2 == 0 ? colA : colB, p % 2 == 0 ? colA : colB, 1.0);
+  };
+    
+  /**
+   * Draw the given palette as a table of colored rectangles.
+   * @memberof rlG
+   * @function
+   * @param {CanvasRenderingContext2D} G2D the 2D canvas context to use for drawing
+   * @param {rlPalette} pal the palette to draw
+   * @param {number} sx the left pixel column at which to start drawing
+   * @param {number} sy the upper pixel row at which to start drawing 
+   * @param {number} cw the column width for the table
+   * @param {number} rh the row height for the table
+   * @param {number} cpr the colors to display per row  
+   */ 
+  var drawPalette = function(G2D, pal, sx, sy, cw, rh, cpr)
+  {
+    var p=0;
+    for(p=0; p<pal.length; p++)
+    {
+      G2D.fillStyle = pal[p].htmlCode;
+      G2D.fillRect(sx + (p%cpr)*cw, sy + Math.floor(p/cpr)*rh, cw, rh);
+    }
   };  
   
   return {
@@ -295,7 +317,8 @@ var rlG = function()
     colorYPBPRtoHTML: colorYPBPRtoHTML,
     colorHTMLtoYPBPR: colorHTMLtoYPBPR,
     drawNormalizedPolygon: drawNormalizedPolygon,
-    drawRefugeeLibLogo: drawRefugeeLibLogo
+    drawRefugeeLibLogo: drawRefugeeLibLogo,
+    drawPalette: drawPalette
   };
 }();
 
@@ -443,17 +466,63 @@ var rlColors = function()
                  
   var paletteIndex = {};
   var names = [];
-  
+   
+  // START of NESlike palette generation
+  // generate full NESlike palette range from 4 linear luma levels and 15 possible NTSC chroma combinations (of which only 12 are used on the PPU)
+  // (based on bit descriptions from: http://problemkaputt.de/everynes.htm#ppupalettes and http://nesdev.com/2C02%20technical%20reference.TXT) 
+  var nesPal = "";
+  var luma = [ 0.25, 0.50, 0.98, 1.0 ];
+  var phaseBase = 2*Math.PI/15;
+  var l = 0, chroma = 0;
+  for(l=0; l<luma.length; l++)
+  {
+    for(chroma=0; chroma<16; chroma++)
+    {
+      var col = (l*16+chroma).toString(16).toUpperCase();
+      col = "0x"+(col.length == 1 ? "0"+col : col);
+      var code = "#000000";
+      var ypbpr = { y: luma[l], pb: 0, pr: 0 };
+      if(chroma >= 14)
+        ypbpr.y = 0;
+      else if(chroma == 13)
+      {
+        if(l<2) // "reserved(blacker than black)" & "black"
+          ypbpr.y = 0;
+        if(l==2)
+          ypbpr.y = 0.2; // "dark grey"
+        if(l==3)
+          ypbpr.y = 0.55; // "slightly brighter light gray"  
+      }  
+      else if(chroma != 0 && chroma != 13)
+      {
+        ypbpr.y = l != 2 ? luma[l] : 0.75;
+          
+        ypbpr.pb = Math.cos((chroma-1)*phaseBase)*0.245759906496; // 0.344136*0.714136;         
+        ypbpr.pr = Math.cos((chroma-6)*phaseBase)*0.245759906496;  
+      } 
+      
+      code = rlG.colorYPBPRtoHTML(ypbpr);
+      
+      nesPal += col+code+",";  
+    }
+  }
+  nesPal = nesPal.substr(0,nesPal.length-1);
+  palettes.push(new rlPalette("NES*", null, nesPal));
+  // END of NESlike palette generation
+
+  // register all palettes
   var p = 0;
   for(p=0; p<palettes.length; p++)
   {
     paletteIndex[palettes[p].name] = palettes[p];
     names.push(palettes[p].name);
   }
+  names = names.sort();
+    
     
   /** 
    * Get one of the built-in well-known palettes of **Refugee Lib**.
-   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, MSX, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
+   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, MSX, NES*, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
    * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes}   
    * @memberof rlColors 
    * @function
