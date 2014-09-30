@@ -412,7 +412,14 @@ var rlPalette = function(paletteName, namedColors, colNameCodePairs)
 var rlColors = function()
 {
   // C64 colors hexcodes borrowed from http://www.pepto.de/projects/colorvic/
-  var palettes = [ new rlPalette("AMSTRADCPC", null,
+  // AA16 palette from http://androidarts.com/palette/16pal.htm
+  // DB16 palette from http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
+  var palettes = [ new rlPalette("AA16", null,
+                     "void#000000,ash#9D9D9D,blind#FFFFFF,bloodred#BE2633,"+
+                     "pigmeat#E06F8B,oldpoop#493C2B,newpoop#A46422,blaze#EB8931,"+
+                     "zornskin#F7E26B,shadegreen#2F484E,leafgreen#44891A,slimegreen#A3CE27,"+
+                     "nightblue#1B2632,seablue#005784,skyblue#31A2F2,cloudblue#B2DCEF"),
+                   new rlPalette("AMSTRADCPC", null,
                      "black#000000,blue#000091,bright blue#0000FF,"+
                      "red#910000,magenta#910091,violet#9100FF,"+
                      "bright red#FF0000,purple#FF0091,bright magenta#FF00FF,"+
@@ -436,7 +443,12 @@ var rlColors = function()
                      "black#000000,low blue#0000B7,low green#00B700,low cyan#00B7B7,"+
                      "low red#B70000,low magenta#B700B7,brown#B76800,light grey#B7B7B7,"+
                      "dark grey#686868,high blue#6868FF,high green#68FF68,high cyan#68FFFF,"+
-                     "high red#FF6868,high magenta#FF68FF,yellow#FFFF68,white#FFFFFF"),  
+                     "high red#FF6868,high magenta#FF68FF,yellow#FFFF68,white#FFFFFF"), 
+                   new rlPalette("DB16", null,
+                     "black#140C1C,dark brown#442434,deep blue#30346D,dark grey#4E4A4E,"+
+                     "brown#854C30,dark green#346524,blood red#D04648,grey#757161,"+
+                     "sky blue#597DCE,orange#D27D2C,light grey#8595A1,light green#6DAA2C,"+
+                     "light skin#D2AA99,turquoise#6DC2CA,yellow#DAD45E,white#DEEED6"),   
                    new rlPalette("GB", null, 
                      "black#000000,dark grey#505050,light grey#A0A0A0,white#FFFFFF"),
                    new rlPalette("MSX", null,
@@ -521,9 +533,9 @@ var rlColors = function()
     
     
   /** 
-   * Get one of the built-in well-known palettes of **Refugee Lib**.
-   * valid palette names are: AMSTRADCPC, APPLEII, C64, CGA, GB, MSX, NES*, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
-   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes}   
+   * Get one of the built-in well-known (from oldschool hardware or from the pixelart community) palettes of **Refugee Lib**.
+   * valid palette names are: AA16, AMSTRADCPC, APPLEII, C64, CGA, DB16, GB, MSX, NES*, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
+   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes} | [(AA16) AndroidArts aka Arne's 16 color palette]{@link http://androidarts.com/palette/16pal.htm} | [(DB16) DawnBringer's 16 color palette]{@link http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795}   
    * @memberof rlColors 
    * @function
    * @param {string} name the name of the palette to get    
