@@ -72,7 +72,7 @@ var rlDemos = new function()
                         
     var state = { x: width/2, y: height/2, sx: speedx, sy: speedy, c:0, b:pal.length-1, p: [] };
     
-    var textToDisplay = helloText;
+    var textToDisplay = " "+helloText;
     var i,j;
     for(i = 0; i < textToDisplay.length; i++)
     {
@@ -95,7 +95,9 @@ var rlDemos = new function()
     var dl = 0;    
     
     i=0; // for delayed object activation    
-    
+            
+    var towardsMouse = false;
+    var mx = 0, my = 0;
     myEngine.onUpdateLogic = function(tick) 
     {    
       for(j=0; j<state.p.length; j++)
@@ -122,6 +124,16 @@ var rlDemos = new function()
               da = Math.sqrt(dx*dx + dy*dy); 
               state.p[j].x += da/activationDelay * dx / da;
               state.p[j].y += da/activationDelay * dy / da;
+            }
+            else if(j==0 && state.p[j].active && towardsMouse)
+            {
+              dx = mx - state.p[j].x;
+              dy = my - state.p[j].y;
+              da = Math.sqrt(dx*dx + dy*dy); 
+              state.p[j].sx = dx / da*activationDelay;
+              state.p[j].sy = dy / da*activationDelay;  
+              
+              //towardsMouse = false;
             }
             
             if(tick % fgCycle == 0)
@@ -228,6 +240,13 @@ var rlDemos = new function()
         palI = ((palI - 1 < 0) ? palNames.length-1 : palI - 1);
         updatePal = true;
       }
+      if(cE.buttons.left)
+      {
+        towardsMouse = true;
+        mx = cE.cx;
+        my = cE.cy;
+      }
+      else towardsMouse = false;
       
       if(rlInputEvent.isKeyDownEvent(pE,cE, "LP"))
        showPalette = !showPalette;
