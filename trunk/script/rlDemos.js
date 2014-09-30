@@ -58,7 +58,8 @@ var rlDemos = new function()
   {
     var width = engineWidth;
     var height = engineHeight;
-    var jitter = charJitter;        
+    var jitter = charJitter;
+    var showPalette = true;        
     var myEngine = new rlEngine(containerId, engineName, false, width, height);
     myEngine.changeLUPS(32);
     
@@ -160,6 +161,8 @@ var rlDemos = new function()
       if(tick % activationDelay == 0 && i<state.p.length)
       { 
         state.p[i].active = true;
+        if(i>0)
+          state.p[i].c = (state.p[i-1].c+1) % pal.length; 
         i++;  
       }                          
     };
@@ -204,6 +207,12 @@ var rlDemos = new function()
       G2D.textBaseline = "middle";      
       G2D.fillStyle = rlG.colorHTMLtoYPBPR(pal[state.b].htmlCode).y < 0.5 ? "#FFFFFF" : "#000000";
       G2D.fillText("palette(arrow left/right to change): "+palNames[palI], width/2, height-12);
+      G2D.fillText("(P to toggle palette display)", width/2, height-24);
+      
+      if(showPalette)
+      {
+        rlG.drawPalette(G2D, pal, width/2-(pal.length>15 ? 8 : pal.length/2)*8, height-44-(pal.length>16 ? Math.round(pal.length/16) : 1)*8, 8, 8, 16);
+      }
     };
     
     myEngine.onInputEvent = function(pE, cE)
@@ -219,6 +228,9 @@ var rlDemos = new function()
         palI = ((palI - 1 < 0) ? palNames.length-1 : palI - 1);
         updatePal = true;
       }
+      
+      if(rlInputEvent.isKeyDownEvent(pE,cE, "LP"))
+       showPalette = !showPalette;
       
       if(updatePal)
       {
