@@ -414,6 +414,7 @@ var rlColors = function()
   // C64 colors hexcodes borrowed from http://www.pepto.de/projects/colorvic/
   // AA16 palette from http://androidarts.com/palette/16pal.htm
   // DB16 palette from http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
+  // DB32 palette from http://www.pixeljoint.com/forum/forum_posts.asp?TID=16247
   var palettes = [ new rlPalette("AA16", null,
                      "void#000000,ash#9D9D9D,blind#FFFFFF,bloodred#BE2633,"+
                      "pigmeat#E06F8B,oldpoop#493C2B,newpoop#A46422,blaze#EB8931,"+
@@ -448,7 +449,16 @@ var rlColors = function()
                      "black#140C1C,dark brown#442434,deep blue#30346D,dark grey#4E4A4E,"+
                      "brown#854C30,dark green#346524,blood red#D04648,grey#757161,"+
                      "sky blue#597DCE,orange#D27D2C,light grey#8595A1,light green#6DAA2C,"+
-                     "light skin#D2AA99,turquoise#6DC2CA,yellow#DAD45E,white#DEEED6"),   
+                     "light skin#D2AA99,turquoise#6DC2CA,yellow#DAD45E,white#DEEED6"),
+                   new rlPalette("DB32", null,
+                     "black#000000,valhalla#222034,loulou#45283C,oiled cedar#663931,"+
+                     "rope#8F563B,tahiti gold#DF7126,twine#D9A066,pancho#EEC39A,"+
+                     "golden fizz#FBF236,atlantis#99E550,christi#6ABE30,elf green#37946E,"+
+                     "dell#4B692F,verdigris#524B24,opal#323C39,deep koamaru#3F3F74,"+
+                     "venice blue#306082,royal blue#5B6EE1,cornflower#639BFF,viking#5FCDE4,"+
+                     "light steel blue#CBDBFC,white#FFFFFF,heather#9BADB7,topaz#847E87,"+
+                     "dim gray#696A6A,smokey ash#595652,clairvoyant#76428A,brown#AC3232,"+
+                     "mandy#D95763,plum#D77BBA,rain forest#8F974A,stinger#8A6F30"),
                    new rlPalette("GB", null, 
                      "black#000000,dark grey#505050,light grey#A0A0A0,white#FFFFFF"),
                    new rlPalette("MSX", null,
@@ -534,8 +544,8 @@ var rlColors = function()
     
   /** 
    * Get one of the built-in well-known (from oldschool hardware or from the pixelart community) palettes of **Refugee Lib**.
-   * valid palette names are: AA16, AMSTRADCPC, APPLEII, C64, CGA, DB16, GB, MSX, NES*, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
-   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes} | [(AA16) AndroidArts aka Arne's 16 color palette]{@link http://androidarts.com/palette/16pal.htm} | [(DB16) DawnBringer's 16 color palette]{@link http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795}   
+   * valid palette names are: AA16, AMSTRADCPC, APPLEII, C64, CGA, DB16, DB32, GB, MSX, NES*, TELETEXT, TO7/70, VIC20, ZXSPECTRUM  
+   * @see [C64 palette at pepto.de]{@link http://www.pepto.de/projects/colorvic/} | [8bit computer palettes at wikipedia.org]{@link http://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_palettes} | [(AA16) AndroidArts aka Arne's 16 color palette]{@link http://androidarts.com/palette/16pal.htm} | [(DB16) DawnBringer's 16 color palette]{@link http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795} | [(DB32) DawnBringer's 32 color palette]{@link http://www.pixeljoint.com/forum/forum_posts.asp?TID=16247}   
    * @memberof rlColors 
    * @function
    * @param {string} name the name of the palette to get    
