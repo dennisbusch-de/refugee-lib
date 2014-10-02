@@ -490,11 +490,13 @@ var rlColors = function()
   var names = [];
    
   // START of NESlike palette generation
-  // generate full NESlike palette range from 4 linear luma levels and 15 possible NTSC chroma combinations (of which only 12 are used on the PPU)
-  // (based on bit descriptions from: http://problemkaputt.de/everynes.htm#ppupalettes and http://nesdev.com/2C02%20technical%20reference.TXT) 
+  // generate full NESlike palette range from 4 linear luma levels and 12 NTSC chroma combinations
+  // (based on bit descriptions from: http://problemkaputt.de/everynes.htm#ppupalettes and http://nesdev.com/2C02%20technical%20reference.TXT 
+  //  and on colorwheel description from here http://www.ntsc-tv.com/ntsc-index-06.htm) 
   var nesPal = "";
   var luma = [ 0.25, 0.50, 0.98, 1.0 ];
-  var phaseBase = 2*Math.PI/15;
+  var wheelDegrees = [ 347, 17, 47, 77, 107, 137, 167, 197, 217, 247, 277, 307 ];  
+  var toRAD = Math.PI/180;
   var l = 0, chroma = 0;
   for(l=0; l<luma.length; l++)
   {
@@ -519,8 +521,8 @@ var rlColors = function()
       {
         ypbpr.y = l != 2 ? luma[l] : 0.75;
           
-        ypbpr.pb = Math.cos((chroma-1)*phaseBase)*0.245759906496; // 0.344136*0.714136;         
-        ypbpr.pr = Math.cos((chroma-6)*phaseBase)*0.245759906496;  
+        ypbpr.pb = Math.cos(wheelDegrees[chroma-1]*toRAD)*0.25;         
+        ypbpr.pr = Math.sin(wheelDegrees[chroma-1]*toRAD)*0.25;  
       } 
       
       code = rlG.colorYPBPRtoHTML(ypbpr);
