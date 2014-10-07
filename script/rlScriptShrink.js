@@ -203,6 +203,8 @@ var rlScriptShrink = function()
     
     // CODE TOKENIZATION start {
     // match whole words containing only letters,digits and underscores(charcode 5F)
+    var specialTokens = "instanceof "; // these will be stored with an additional whitespace at the end, because they can occur in sequences which contain only valid javascript identifiers which can lead to invalid expanded code because of whitespace removal later down
+    
     var ct = r.match(/\b[\w\d\x5F]*\b/g);
     var ctd = {};
     
@@ -217,11 +219,11 @@ var rlScriptShrink = function()
         ctd[ct[i]]++;
     }
           
-    // sort tokens by length, shortest first (and discard single use tokens)
+    // sort tokens by length, shortest first (and discard single use and exclude tokens)
     var tt = [];
     for(e in ctd)
       if(ctd[e] > 1)
-        tt.push(e);
+        tt.push(specialTokens.indexOf(e) == -1 ? e : e+" ");
     tt.sort(function(a,b) { return a.length-b.length; });
     
     // collect tokens and discard tokens not worth storing because of being too                            

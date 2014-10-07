@@ -98,7 +98,7 @@ rlCore = function() {
    * @private 
    * @default
    */
-  var version = "Refugee Lib v.0.01c";
+  var version = "Refugee Lib v.0.01d";
 
   /**    
    * @memberof rlCore 

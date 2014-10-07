@@ -16,7 +16,7 @@ The latest WIP version can be downloaded from the public SVN repository:
 [https://code.google.com/p/refugee-lib/source/checkout](https://code.google.com/p/refugee-lib/source/checkout)
 
 ## Third Party Libraries
-**JSZip** and **webgl-utils** are utilized and included by **Refugee Lib** under their respective licenses [as described here](https://refugee-lib.googlecode.com/svn/trunk/LICENSE.txt).
+Third party libraries are utilized or adopted and included by **Refugee Lib** under their respective licenses [as described here](https://refugee-lib.googlecode.com/svn/trunk/LICENSE.txt).
   
 ## License
 Refugee Lib is an open source project, released under the "MIT License".

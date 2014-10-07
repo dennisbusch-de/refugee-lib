@@ -78,7 +78,25 @@ var rlDemos = new function()
     {
       state.p.push({ x: state.x, y: state.y, sx: state.sx, sy: state.sy, c: 0, active: false });
     }
-    
+               
+    // sound effects
+    var effects = [];
+    var et;
+    for(et=0; et<4; et++)
+      effects.push(rlSfxr.generateEffectAudio(et < 2 ? rlSfxr.noiseWave : rlSfxr.sineWave, 
+        /*envAttack, envSustain, envPunch, envDecay*/ null, 0.3155, 0.414, 0.1991,
+        /*freqBase, freqMinCutoff, freqSlide, freqDeltaSlide*/ et < 2 ? 1.0/(4-et) : 2.0/(6-et), null, -0.1705, null,
+        /*vibDepth, vibSpeed*/ 0.3213, 0.1103,
+        /*arpModFreq, arpModSpeed*/ null, null,
+        /*dutyCycle, dutySweep*/ null, null,
+        /*repeatSpeed*/  null,
+        /*flangeOffset, flangeSweep*/ null, null,
+        /*lpfCutoff, lpfCutoffSweep, lpfResonance*/ null, null, null,
+        /*hpfCutoff, hpfCutoffSweep*/ null, null,
+        /*sampleVolume, sampleRate, sampleBits*/ 0.2, 22050, 16,
+        /*audioVolume*/ et < 2 ? 0.1 : 0.3
+      ));
+     
     // for the logos
     var slmin = 15, slmax = 63, sgg = 1.1;
     state.p.push({ x: state.x, y: state.y, sx: -state.sx, sy: -state.sy, c: 0, active: false, s: 15, sg: 1.0/sgg });
@@ -98,24 +116,66 @@ var rlDemos = new function()
             
     var towardsMouse = false;
     var mx = 0, my = 0;
+    
+    // quick and dirty minimalistic tracker!
+    // (with a short and shitty ToBeOnTop(C64) tribute loop :D ) 
+    var effectTracks = [];
+    var code = 0;
+    //                 ,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....
+    effectTracks.push("/1234567890987654321/...1......................8*7654321.......................8*7654321................*...*...*......8*428*421...............................4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.....8*......8*......8*....4*1.4*1.4*1.4*1.4*1.....4*1.4*1.4*1...........8*...........");
+    effectTracks.push("0987654321/1234567890...1.......*.......*...*...*.......*...*...*.......*...*...*.......*...*...*.......*...*...*......4*...*1.................................4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.....8*......8*......8*....4*1.4*1.4*1.4*1.4*1.....4*1.4*1.4*1...........8*...........");
+    effectTracks.push("0987654321/1234567890...3...................*...............................*...........................................*...*...................5*4321.................................................................5*4321..............................................8*7654321....");
+    effectTracks.push("/1234567890987654321/...3......................5*4321..........................5*4321...................................................................................................................................................................................................");
+       
+    var cTick = 0;
+    var infoCol = "#FFFFFF";
     myEngine.onUpdateLogic = function(tick) 
-    {    
+    {  
+      cTick = ((tick)-1);
+      for(et=0; et<effectTracks.length; et++)
+      {    
+        if(effectTracks[et].charAt(cTick%effectTracks[et].length) == "*")
+        {
+          effects[et].currentTime = 0;
+          effects[et].play();
+        }
+        
+        code = effectTracks[et].charCodeAt(cTick%effectTracks[et].length);
+        if(code > 46 && code < 58) // /,0..9
+        {
+          effects[et].volume = (code-47)*0.0125;
+        }
+      }
+    
       for(j=0; j<state.p.length; j++)
       { 
         if(state.p[j].active)
         { 
-          if(j==0 || j>=textToDisplay.length)
+          if(j==0 || j>=textToDisplay.length) // first letter or logo?
           {                         
-            
             state.p[j].x += state.p[j].sx;
             state.p[j].y += state.p[j].sy;
             if(state.p[j].x < 0 || state.p[j].x >= width)
+            {
               state.p[j].sx = -state.p[j].sx;
+              if(typeof state.p[j].effect != "undefined" && j != 0)
+              { 
+                state.p[j].effect.currentTime = 0;
+                state.p[j].effect.play();
+              } 
+            }
             if(state.p[j].y < 0 || state.p[j].y >= height)
+            {
               state.p[j].sy = -state.p[j].sy;
+              if(typeof state.p[j].effect != "undefined" && j != 0)
+              {                          
+                state.p[j].effect.currentTime = 0;
+                state.p[j].effect.play();
+              }
+            }
           }
           
-          if(j<textToDisplay.length) // letter ?
+          if(j<textToDisplay.length) // follow-up letter ?
           {
             if(j>0)
             { 
@@ -124,6 +184,7 @@ var rlDemos = new function()
               da = Math.sqrt(dx*dx + dy*dy); 
               state.p[j].x += da/activationDelay * dx / da;
               state.p[j].y += da/activationDelay * dy / da;
+              
             }
             else if(j==0 && state.p[j].active && towardsMouse)
             {
@@ -131,9 +192,7 @@ var rlDemos = new function()
               dy = my - state.p[j].y;
               da = Math.sqrt(dx*dx + dy*dy); 
               state.p[j].sx = dx / da*activationDelay;
-              state.p[j].sy = dy / da*activationDelay;  
-              
-              //towardsMouse = false;
+              state.p[j].sy = dy / da*activationDelay;
             }
             
             if(tick % fgCycle == 0)
@@ -178,13 +237,14 @@ var rlDemos = new function()
         i++;  
       }                          
     };
-          
+    
+    var u,v;      
     myEngine.onUpdateViews = function(GL, G2D, time)
     {  
       if(GL == null || G2D == null)
         return;                                
     
-      GL.clearColor(pal[state.b].r, pal[state.b].g,pal[state.b].b, 1.0);
+      GL.clearColor(pal[state.b].r, pal[state.b].g, pal[state.b].b, 1.0);
       GL.clear(GL.COLOR_BUFFER_BIT);
     
       G2D.clearRect(0,0,width,height);
@@ -220,6 +280,28 @@ var rlDemos = new function()
       G2D.fillStyle = rlG.colorHTMLtoYPBPR(pal[state.b].htmlCode).y < 0.5 ? "#FFFFFF" : "#000000";
       G2D.fillText("palette(arrow left/right to change): "+palNames[palI], width/2, height-12);
       G2D.fillText("(P to toggle palette display)", width/2, height-24);
+      
+      // draw tracker info
+      infoCol = G2D.fillStyle;
+      G2D.fillStyle = "#FFFFA0";
+      G2D.fillRect(width/2-effectTracks.length/2*12-6,60-6,effectTracks.length*12,12); 
+      G2D.fillStyle = infoCol;
+      for(u=0; u<effectTracks.length; u++)
+      {
+        for(v=-4; v<=4; v++)
+        {
+          if(v==0)
+            G2D.fillStyle = "#4040FF";
+          if(v==1)
+            G2D.fillStyle = infoCol;
+          G2D.fillText(effectTracks[u].charAt((cTick+v)%effectTracks[u].length), width/2 - 12*effectTracks.length/2+12*u, 60+v*12);
+          
+          if(u<2)
+            G2D.fillRect(width/2-effectTracks.length/2*12-6-effects[u].volume*240,60-4*u,effects[u].volume*240,4);
+          else
+            G2D.fillRect(width/2+effectTracks.length/2*12-6,60-4*(u-2),effects[u].volume*240,4);
+        } 
+      }
       
       if(showPalette)
       {

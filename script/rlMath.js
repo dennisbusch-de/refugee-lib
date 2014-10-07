@@ -46,6 +46,22 @@ var rlMath = function()
   {
     return (value < min) ? min : ((value > max) ? max : value); 
   };
+  
+  /** 
+   * Get a custom capper function which caps values from a source value or returns a capped default value.   
+   * @memberof rlMath 
+   * @function
+   * @param {number} min the minimum
+   * @param {number} max the maximum
+   * @returns {function} the custom capper function which takes parameters(value, defaultValue) and caps to [min,max]
+   */
+  var getCapperFunction = function(min, max)
+  {
+    return new Function('value', 'defaultValue', 
+      'var min = '+min+', max = '+max+'; '+
+      'var v = value != null ? value : defaultValue; '+
+      'return (v < min) ? min : ((v > max) ? max : v);');
+  }; 
    
   /** (not an actual type, use object literals with these properties)  
    * Defines a point in 2D cartesian space where +x is to the right of and +y is below the origin.
@@ -93,6 +109,7 @@ var rlMath = function()
     
   return {
     capValue: capValue,
+    getCapperFunction: getCapperFunction,
     p2DinRect: p2DinRect,
     p2DinRectA : p2DinRectA
   };
