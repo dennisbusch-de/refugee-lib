@@ -124,29 +124,47 @@ var rlDemos = new function()
     //                 ,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....,,,,....
     effectTracks.push("/1234567890987654321/...1......................8*7654321.......................8*7654321................*...*...*......8*428*421...............................4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.....8*......8*......8*....4*1.4*1.4*1.4*1.4*1.....4*1.4*1.4*1...........8*...........");
     effectTracks.push("0987654321/1234567890...1.......*.......*...*...*.......*...*...*.......*...*...*.......*...*...*.......*...*...*......4*...*1.................................4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.4*1.....8*......8*......8*....4*1.4*1.4*1.4*1.4*1.....4*1.4*1.4*1...........8*...........");
-    effectTracks.push("0987654321/1234567890...3...................*...............................*...........................................*...*...................5*4321.................................................................5*4321..............................................8*7654321....");
+    effectTracks.push("0987654321/1234567890...3...................*...............................*...............................................*...................5*4321.................................................................3*..................................................8*7654321....");
     effectTracks.push("/1234567890987654321/...3......................5*4321..........................5*4321...................................................................................................................................................................................................");
        
-    var cTick = 0;
+    var subTick = -1;
+    var cTick = -1;
+    var tSpeed = navigator.userAgent.toLowerCase().indexOf('firefox') != -1 ? 1 : 1;
+    var tDelay = navigator.userAgent.toLowerCase().indexOf('firefox') != -1 ? 31.815 : 31.25;
     var infoCol = "#FFFFFF";
-    myEngine.onUpdateLogic = function(tick) 
-    {  
-      cTick = ((tick)-1);
-      for(et=0; et<effectTracks.length; et++)
-      {    
-        if(effectTracks[et].charAt(cTick%effectTracks[et].length) == "*")
-        {
-          effects[et].currentTime = 0;
-          effects[et].play();
-        }
-        
-        code = effectTracks[et].charCodeAt(cTick%effectTracks[et].length);
-        if(code > 46 && code < 58) // /,0..9
-        {
-          effects[et].volume = (code-47)*0.0125;
+    var lastTS = rlCore.getTimestamp();
+    var nowTS = rlCore.getTimestamp();
+    
+    var trackerUpdate = function(tick)
+    {
+      subTick++;
+      cTick = subTick/tSpeed;
+      if(subTick%tSpeed == 0)
+      { 
+        for(et=0; et<effectTracks.length; et++)
+        {    
+          if(effectTracks[et].charAt(cTick%effectTracks[et].length) == "*")
+          {
+            effects[et].currentTime = 0;
+            effects[et].play();
+          }
+          
+          code = effectTracks[et].charCodeAt(cTick%effectTracks[et].length);
+          if(code > 46 && code < 58) // /,0..9
+          {
+            effects[et].volume = (code-47)*0.0125;
+          }
         }
       }
+    }
     
+    var trackerTimer = rlLogicTimerWorker.createWorker("trackerTimer", false);
+    trackerTimer.addEventListener("message", trackerUpdate, false);
+    trackerTimer.postMessage(tDelay);
+    trackerTimer.postMessage("start");
+    
+    myEngine.onUpdateLogic = function(tick) 
+    {  
       for(j=0; j<state.p.length; j++)
       { 
         if(state.p[j].active)
@@ -329,6 +347,18 @@ var rlDemos = new function()
         my = cE.cy;
       }
       else towardsMouse = false;
+      
+      if(cE.buttons.wheelDown)
+      {
+        tDelay -= 0.005;
+        
+        trackerTimer.postMessage(tDelay);
+      }
+      if(cE.buttons.wheelUp)
+      {
+        tDelay += 0.005;
+        trackerTimer.postMessage(tDelay);
+      }
       
       if(rlInputEvent.isKeyDownEvent(pE,cE, "LP"))
        showPalette = !showPalette;
