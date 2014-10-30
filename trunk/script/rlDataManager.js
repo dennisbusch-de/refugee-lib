@@ -144,6 +144,7 @@ rlData = function(key, srcURL)
   /**         
    * Start loading the data asynchronously. Make sure to set [onloadfailed]{@link rlData#onloadfailed}, [onloadprogress]{@link rlData#onloadprogress} and [onloadsuccess]{@link rlData#onloadsuccess} before calling this. 
    * @function
+   * @param {string} [overrideResponseType=arraybuffer] explicitly set the response type for the asynchronous XMLHttpRequest 
    */
   this.startload = startload; 
   
@@ -226,11 +227,11 @@ rlDataManager = function()
   
   var myself = this;
   var items = {};
-  //var itemsFromArchives = {}; 
+   
   var itemsTotal = 0;
   var itemsLoaded = 0; 
   var itemsFailed = 0;
-  var failInfo = {};
+  
   var keysToLoad = [];
              
   // callbacks for use by external object which uses the data manager
@@ -253,11 +254,11 @@ rlDataManager = function()
     if(typeof items[key].isMeta != "undefined")
       items[key].item.startload("text");
     else
-      items[key].item.startload();
+      items[key].item.startload(items[key].responseType);
   };
   
   var allfinishedCheck = function()
-  {
+  {      
     if(itemsLoaded + itemsFailed == itemsTotal) // all finished(successfully or failed)?
     {    
       myself.onloadfinished(itemsLoaded, itemsFailed, itemsTotal);
@@ -266,13 +267,13 @@ rlDataManager = function()
       myself.loadnext();
   };
           
-  var onitemerror = function(key, srcURL, httpStatusCode) {
-    if(typeof items[key].failInfo == null)
+  var onitemerror = function(key, srcURL, httpStatusCode) { 
+    if(items[key].failInfo == null)
     {
       itemsFailed++;           
-      items[key].failInfo = { httpStatusCode: httpStatusCode };        
-      allfinishedCheck();
-    }   
+      items[key].failInfo = { httpStatusCode: httpStatusCode };
+      allfinishedCheck();        
+    }  
   };
                               
   var onitemprogress = function(key, srcURL, bytesLoaded, bytesTotal) {
@@ -334,8 +335,9 @@ rlDataManager = function()
        * @property {rlData} item the {@link rlData} instance assigned to this entry
        * @property {object|null} metadata only set if defined in {@link rlDataManager.sourceDesc} or if loaded from a .metadata file
        * @property {object|null} failInfo only set if loading of the file within the {@link rlData} instance failed
-       */       
-      var o = { item: new rlData(sources[i].key, sources[i].srcURL), 
+       */        
+      var o = { item: new rlData(sources[i].key, sources[i].srcURL),
+                responseType: ((typeof sources[i].overrideResponseType != "undefined") ? sources[i].overrideResponseType : "arraybuffer"),
                 metadata: ((typeof sources[i].metadata != "undefined") ? sources[i].metadata : null),
                 failInfo: null };
       o.item.onloadfailed = onitemerror;
@@ -370,7 +372,8 @@ rlDataManager = function()
    * @memberof rlDataManager
    * @property {string} key unique id to associate with the file within the {@link rlDataManager}
    * @property {string} srcURL relative or absolute URL to the file
-   * @property {object} [metadata] anything you want (e.g. for extensions or additional metadata)  
+   * @property {string} [overrideResponseType=arraybuffer] optional responseType to pass on to {@link rlData#startload} 
+   * @property {object} [metadata=null] anything you want (e.g. for extensions or additional metadata)  
    * if omitted, [startload]{@link rlDataManager#startload} will attempt to get it from a file named "srcURL.metadata" by running JSON.parse on that files contents (if such file exists)
    */  
       
@@ -396,7 +399,7 @@ rlDataManager = function()
   this.getEntry = function(key) { return items[key]; };
       
   /**
-   * Get all known keys.
+   * Get all known keys (sorted alphanumerically).
    * @function   
    * @returns {string[]}
    */
@@ -405,7 +408,8 @@ rlDataManager = function()
     var rKeys = [];
     for(key in items)
       rKeys.push(key);
-    return rKeys;      
+      
+    return rKeys.sort();      
   };
   
   /**

@@ -60,7 +60,9 @@ var rlDemos = new function()
     var height = engineHeight;
     var jitter = charJitter;
     var showPalette = true;        
-    var myEngine = new rlEngine(containerId, engineName, false, width, height);
+    var myEngine = new rlEngine(containerId, engineName, false, width, height, 
+                                { alpha: true, depth: true, antialias: false }
+                               );
     myEngine.changeLUPS(32);
     
     var palNames = rlColors.getPaletteNames();
@@ -264,6 +266,9 @@ var rlDemos = new function()
     
       GL.clearColor(pal[state.b].r, pal[state.b].g, pal[state.b].b, 1.0);
       GL.clear(GL.COLOR_BUFFER_BIT);
+      
+      
+      
     
       G2D.clearRect(0,0,width,height);
       G2D.shadowBlur = 0;
@@ -287,7 +292,7 @@ var rlDemos = new function()
         }
         else // logo?
         { 
-          rlG.drawRefugeeLibLogo(G2D, Math.round(state.p[j].x+jx-state.p[j].s/2), Math.round(state.p[j].y+jy-state.p[j].s/2), 
+          rlG2D.drawRefugeeLibLogo(G2D, Math.round(state.p[j].x+jx-state.p[j].s/2), Math.round(state.p[j].y+jy-state.p[j].s/2), 
                                  state.p[j].s, state.p[j].s, pal[(Math.floor(state.b+pal.length/2))%pal.length].htmlCode, pal[state.p[j].c].htmlCode);  
         }
       }
@@ -295,7 +300,7 @@ var rlDemos = new function()
       G2D.font = "normal 12px Courier";
       G2D.textAlign = "center";
       G2D.textBaseline = "middle";      
-      G2D.fillStyle = rlG.colorHTMLtoYPBPR(pal[state.b].htmlCode).y < 0.5 ? "#FFFFFF" : "#000000";
+      G2D.fillStyle = rlColors.HTMLtoYPBPR(pal[state.b].htmlCode).y < 0.5 ? "#FFFFFF" : "#000000";
       G2D.fillText("palette(arrow left/right to change): "+palNames[palI], width/2, height-12);
       G2D.fillText("(P to toggle palette display)", width/2, height-24);
       
@@ -323,7 +328,7 @@ var rlDemos = new function()
       
       if(showPalette)
       {
-        rlG.drawPalette(G2D, pal, width/2-(pal.length>15 ? 8 : pal.length/2)*8, height-44-(pal.length>16 ? Math.round(pal.length/16) : 1)*8, 8, 8, 16);
+        rlG2D.drawPalette(G2D, pal, width/2-(pal.length>15 ? 8 : pal.length/2)*8, height-44-(pal.length>16 ? Math.round(pal.length/16) : 1)*8, 8, 8, 16);
       }
     };
     

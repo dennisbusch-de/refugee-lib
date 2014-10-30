@@ -47,10 +47,11 @@
  * @param {boolean} debug set to true to enable debug messages and debug info to be displayed on view updates
  * @param {number} width the width of the engines views in pixels
  * @param {number} height the height of the engines views in pixels
+ * @param {WebGLContextAttributes} [glContextAttributes] [WebGLContextAttributes]{@link https://www.khronos.org/registry/webgl/specs/1.0/#5.2}
  * @param {boolean} [useOwnTimer=true] set to false to prevent the engine from instantiating and managing its own logic update timer 
  * @returns {rlEngine}
  */
-rlEngine = function(containerId, name, debug, width, height, useOwnTimer) 
+rlEngine = function(containerId, name, debug, width, height, glContextAttributes, useOwnTimer) 
 {
   // inherit all of rlObject
   rlObject.call(this);
@@ -93,7 +94,26 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
   var canvasOverlay = null; // will hold overlay canvas
   var canvasRect = null; // will hold canvas rectangle coordinates
   var GL = null; // will hold webgl drawing context for main canvas
-  var G2D = null; // will hold 2D drawing context for overlay canvas 
+  var G2D = null; // will hold 2D drawing context for overlay canvas
+   
+  var getGL = function() { return GL; };
+  var getG2D = function() { return G2D; };
+  
+  /** 
+   * Get the webgl rendering context which was instantiated at construction time.
+   * @see [WebGLRenderingContext]{@link https://developer.mozilla.org/en/docs/Web/API/WebGLRenderingContext}
+   * @function
+   * @returns {WebGLRenderingContext|null} the webgl rendering context or null if none is available 
+   */
+  this.getGL = getGL;
+  
+  /**
+   * Get the 2D rendering context which was instantiated at construction time.
+   * @see [CanvasRenderingContext2D]{@link https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D}
+   * @function
+   * @returns {CanvasRenderingContext2D|null} the 2D rendering context or null if none is available 
+   */
+  this.getG2D = getG2D; 
          
   // for debugging/development/browser behavior exploration
   var lastRawKeyInfo = "";
@@ -684,8 +704,13 @@ rlEngine = function(containerId, name, debug, width, height, useOwnTimer)
     canvasOverlay.style.cursor = "none";
     setCursorImage(rlCursors.getDefaultCursorImage(), 0, 0);
 
-    // context initialization
-    GL = rlG.getContextGL(canvasMain);
+    // graphic context initialization
+    GL = rlG.getContextGL(canvasMain, glContextAttributes);
+    if(GL != null)
+    {
+      GL.viewport(0, 0, Width, Height);
+    }
+    
     G2D = rlG.getContext2D(canvasOverlay);
   }
     

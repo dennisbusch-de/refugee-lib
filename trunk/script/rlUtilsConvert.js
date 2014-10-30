@@ -57,8 +57,26 @@ var rlUtilsConvert = function()
           
     return s;
   };
+  
+  /**
+   * Like n.toString(radix) but fills up zeroes on the left until resulting string is at least as long as the given minLength.
+   * @memberof rlUtilsConvert
+   * @function nToMinLengthString
+   * @param {Number} n the number to convert
+   * @param {Number} radix to be passed to n.toString
+   * @param {Number} minLength the minimum length of the resulting string
+   * @returns {string}
+   */
+   var nToMLS = function(n, radix, minLength)
+   {
+     var r = n.toString(radix);
+     while(r.length < minLength)
+       r = "0"+r;
+     return r;
+   };
     
   return {
-    i32ToBinaryString: i32tbs
+    i32ToBinaryString: i32tbs,
+    nToMinLengthString: nToMLS
   };
 }();
