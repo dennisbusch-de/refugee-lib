@@ -49,16 +49,21 @@ var rlBoot = function()
 
   var regularBootScriptURLs = [
                                 "./script/3rdparty/webgl-utils.js",
+                                "./script/3rdparty/gl-matrix.js",
                                 "./script/3rdparty/jszip.min.js",
+                                "./script/rlDataManager.js",
                                 "./script/rlMath.js",
                                 "./script/rlUtilsConvert.js",
                                 "./script/rlUtilsDOM.js",
                                 "./script/rlSfxr.js", 
                                 "./script/rlG.js",
+                                "./script/rlG2D.js",
+                                "./script/rlGL.js",
+                                "./script/rlColors.js",
+                                "./script/rlCursors.js",
                                 "./script/rlKeys.js",
                                 "./script/rlInputEvent.js",                    
-                                "./script/rlEngine.js",
-                                "./script/rlDataManager.js"
+                                "./script/rlEngine.js"
                                 //" ./script/",
                               ];
    
