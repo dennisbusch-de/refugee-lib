@@ -1,6 +1,8 @@
 # Refugee Lib
 [version](http://www.dennisbusch.de/software/refugeelib/current/docs/rlCore.html#version) - 
 (*this documentation is a work in progress and subject to be changed/extended as the library development progresses*)
+
+development status: *working on it on a highly irregular(whenever I feel like it) basis*
   
 ## Introduction
 The goal of **Refugee Lib** is to provide an easy-to-use HTML5/javascript library for writing games and applications which primarily run directly inside a website without the need to download and install any extensions.
